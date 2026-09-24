@@ -1,7 +1,7 @@
 {
-  "study_revision": 2,
+  "study_revision": 3,
   "inspected_at": "2026-09-24",
-  "scope": "image-based agents: screenshots, documents and tools",
+  "scope": "image-based agents: screenshots, documents, tools, creation, orchestration and traffic",
   "harness_site_head": "56a0cf70f4c0359454ee4bd15a17770b541a3e3e",
   "sources": [
     {
@@ -374,6 +374,114 @@
       "file_sha256": "f548379e23ec9fb6f67635ce3e05aaa7bac529a8a2bcd92c05648ddab991651d"
     },
     {
+      "id": "H23",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/branch_orchestrator.py",
+      "role": "Child creation, overlap dispatch, delayed joins, failures and cleanup",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py",
+      "file_sha256": "e97f8922a61a485732ae5ad401a2b29122b2ce703203ba22a5211add90df7c01"
+    },
+    {
+      "id": "H24",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/credit/issuer.py",
+      "role": "Turn admission, session/prefill slots and credit dispatch",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/issuer.py",
+      "file_sha256": "30caf4f633684f18b094f2f95d6453c372fc8551af9236863c98761ebe377913"
+    },
+    {
+      "id": "H25",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/credit/callback_handler.py",
+      "role": "Request completion and first-token control flow",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/callback_handler.py",
+      "file_sha256": "2114eb180ce47821c7047a4fcab219ef6010b97c9972633d73230e6090e2a9f3"
+    },
+    {
+      "id": "H26",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/credit/sticky_router.py",
+      "role": "Worker affinity, least-loaded routing and fork reference counts",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/sticky_router.py",
+      "file_sha256": "60648cf7f2a1836e2466cf53c1c5d9942e7a63133298ea01f196e3e8865494b6"
+    },
+    {
+      "id": "H27",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/workers/worker.py",
+      "role": "Asynchronous request execution and separate records/control paths",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/worker.py",
+      "file_sha256": "744c1e59799c115bc2db8915b2da4edbeebdcbafd6c0795c722344db4535add4"
+    },
+    {
+      "id": "H28",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/conversation_source.py",
+      "role": "Conversation template sampling and fresh child execution identities",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/conversation_source.py",
+      "file_sha256": "78bb69aa13a6f7e0d185f713a127bc582e1c9b6f938e86018e1622436f85ef9b"
+    },
+    {
+      "id": "H29",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/concurrency.py",
+      "role": "Client session and prefill concurrency controls",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/concurrency.py",
+      "file_sha256": "6f10c731c5be82ea01c53f19b7b07ef101b1603c8c161ec41f82179db973a119"
+    },
+    {
+      "id": "H30",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/credit/structs.py",
+      "role": "One-request credit contract and root/parent/session identities",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/structs.py",
+      "file_sha256": "12bfe87b198e2ebc7f0ed60d77fd474e8df0acc8cbd892952745b962a91efb16"
+    },
+    {
+      "id": "H31",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/common/loop_scheduler.py",
+      "role": "Pending timers, running coroutines and per-tree timer ownership",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/loop_scheduler.py",
+      "file_sha256": "706dda5ad6ec14a717b0ca7f02c1c702d208fe849d9f4b0dec7e25cfc9229c8d"
+    },
+    {
+      "id": "H32",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/replay_dependencies.py",
+      "role": "Recorded cross-stream completion frontiers and runtime barriers",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/replay_dependencies.py",
+      "file_sha256": "acabb96d12f674934e12300560b01b8efff021627a15cb4c37e67e410f01f3da"
+    },
+    {
+      "id": "H33",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/credit/dispatch.py",
+      "role": "Issued, deferred and rejected child lifecycle outcomes",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/dispatch.py",
+      "file_sha256": "851c186caa24b375f14ec13c2e826cbf0501fb2aae6fb5dbdc8c3002a8cf3990"
+    },
+    {
+      "id": "H34",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/phase/runner.py",
+      "role": "Runtime wiring of phases, replay barriers and branch orchestration",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/phase/runner.py",
+      "file_sha256": "803842813515e1ad4b8773930821bf604151a3f32678fee45b6b21f3b448e989"
+    },
+    {
       "id": "A01",
       "repository": "InferenceX-app",
       "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
@@ -487,6 +595,7 @@
   },
   "verification": {
     "actual_python_reducer_fixture": "agentx-metric-walkthrough.json",
+    "source_interval_algorithm_and_illustrative_timeline": "agent-traffic-walkthrough.json",
     "gpu_benchmark_executed": false,
     "vlm_accuracy_evaluated": false,
     "commands_status": "source-grounded templates, not deployment-tested"

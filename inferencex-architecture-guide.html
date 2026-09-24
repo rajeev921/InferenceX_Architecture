@@ -6,7 +6,7 @@
 @media(max-width:1100px){.layout{grid-template-columns:200px 1fr}aside{padding-left:20px}main{padding:35px 30px 70px}h1{font-size:34px}.diagram{margin-left:0;margin-right:0}}@media(max-width:800px){.layout{display:block}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px}.toc>ul>li>ul{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.nav-note{display:none}main{padding:30px 22px 65px}h2{font-size:23px;margin-top:45px}header{padding:18px 22px}header span{display:none}h1{font-size:32px}}
 @media print{aside,header,.progress,.toolbar{display:none}.layout{display:block}main{padding:0;max-width:none}body{font-size:11px}h1{font-size:26px}h2{font-size:20px;margin-top:26px}h3{font-size:15px}.diagram{break-inside:avoid}.diagram svg{min-width:0}a{color:inherit}pre,table{font-size:10px}table{min-width:0}tr{break-inside:avoid}img{max-height:650px;object-fit:contain}footer{padding:12px 0}}
 h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.025em}h2{font-family:Georgia,serif;font-weight:500}.toc a{font-size:12px;padding:6px 0}main{max-width:1210px}td:first-child{width:22%}pre{line-height:1.6}.diagram svg{min-width:790px}.source-count{color:var(--muted);font-size:12px}@media print{.diagram svg{min-width:0}}</style></head><body><div class="progress" id="progress"></div>
-<header><strong>AGENTX / BENCHMARK MECHANICS</strong><div class="toolbar"><span>REVISION 2 · IMAGE AGENTS · 24 SEPTEMBER 2026</span><button type="button" onclick="window.print()">Print / save PDF</button></div></header>
+<header><strong>AGENTX / BENCHMARK MECHANICS</strong><div class="toolbar"><span>REVISION 3 · IMAGE AGENTS · 24 SEPTEMBER 2026</span><button type="button" onclick="window.print()">Print / save PDF</button></div></header>
 <div class="layout"><aside><div class="nav-title">READING MAP</div><div class="toc">
 <ul>
 <li><a href="#inferencex-agentx-and-an-image-agent-benchmark-you-can-build">InferenceX, AgentX, and an image-agent benchmark you can build</a><ul>
@@ -35,80 +35,96 @@ h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.025em}h2{font-fami
 <li><a href="#47-stop-drain-and-export">4.7 Stop, drain, and export</a></li>
 </ul>
 </li>
-<li><a href="#5-what-is-measured-with-exact-arithmetic">5. What is measured, with exact arithmetic</a><ul>
-<li><a href="#51-a-request-has-several-different-timestamps">5.1 A request has several different timestamps</a></li>
-<li><a href="#52-interactivity-and-e2e-normalized-interactivity-differ">5.2 Interactivity and E2E normalized interactivity differ</a></li>
-<li><a href="#53-throughput-needs-a-population-and-a-time-window">5.3 Throughput needs a population and a time window</a></li>
-<li><a href="#54-queue-aware-effective-and-active-metrics">5.4 Queue-aware, effective, and active metrics</a></li>
-<li><a href="#55-missing-data-is-a-state-not-zero">5.5 Missing data is a state, not zero</a></li>
+<li><a href="#5-how-agents-are-created-orchestrated-and-turned-into-traffic">5. How agents are created, orchestrated, and turned into traffic</a><ul>
+<li><a href="#51-what-creating-an-agent-means-in-this-harness">5.1 What “creating an agent” means in this harness</a></li>
+<li><a href="#52-how-the-loader-reconstructs-parentchild-relationships">5.2 How the loader reconstructs parent/child relationships</a></li>
+<li><a href="#53-three-orchestration-layers-operate-independently">5.3 Three orchestration layers operate independently</a></li>
+<li><a href="#54-follow-one-request-through-the-execution-pipeline">5.4 Follow one request through the execution pipeline</a></li>
+<li><a href="#55-spawn-and-fork-are-different-context-operations">5.5 SPAWN and FORK are different context operations</a></li>
+<li><a href="#56-exactly-when-does-a-child-start">5.6 Exactly when does a child start?</a></li>
+<li><a href="#57-joins-have-both-a-dependency-condition-and-a-time-condition">5.7 Joins have both a dependency condition and a time condition</a></li>
+<li><a href="#58-recorded-interval-barriers-preserve-more-than-explicit-joins">5.8 Recorded interval barriers preserve more than explicit joins</a></li>
+<li><a href="#59-a-complete-timed-example-one-tree-seven-requests">5.9 A complete timed example: one tree, seven requests</a></li>
+<li><a href="#510-failures-cancellation-and-termination-are-part-of-orchestration">5.10 Failures, cancellation, and termination are part of orchestration</a></li>
+<li><a href="#511-what-determines-agent-traffic-and-how-to-describe-it">5.11 What determines agent traffic and how to describe it</a></li>
+<li><a href="#512-what-a-real-vlm-agent-orchestrator-must-add">5.12 What a real VLM agent orchestrator must add</a></li>
+<li><a href="#513-code-reading-checklist-for-this-mechanism">5.13 Code-reading checklist for this mechanism</a></li>
 </ul>
 </li>
-<li><a href="#6-speculative-decoding-and-benchmark-validity">6. Speculative decoding and benchmark validity</a><ul>
-<li><a href="#61-some-throughput-runs-deliberately-standardize-acceptance">6.1 Some throughput runs deliberately standardize acceptance</a></li>
-<li><a href="#62-validity-has-multiple-gates">6.2 Validity has multiple gates</a></li>
+<li><a href="#6-what-is-measured-with-exact-arithmetic">6. What is measured, with exact arithmetic</a><ul>
+<li><a href="#61-a-request-has-several-different-timestamps">6.1 A request has several different timestamps</a></li>
+<li><a href="#62-interactivity-and-e2e-normalized-interactivity-differ">6.2 Interactivity and E2E normalized interactivity differ</a></li>
+<li><a href="#63-throughput-needs-a-population-and-a-time-window">6.3 Throughput needs a population and a time window</a></li>
+<li><a href="#64-queue-aware-effective-and-active-metrics">6.4 Queue-aware, effective, and active metrics</a></li>
+<li><a href="#65-missing-data-is-a-state-not-zero">6.5 Missing data is a state, not zero</a></li>
 </ul>
 </li>
-<li><a href="#7-one-concrete-inferencex-job-from-yaml-to-artifacts">7. One concrete InferenceX job from YAML to artifacts</a><ul>
+<li><a href="#7-speculative-decoding-and-benchmark-validity">7. Speculative decoding and benchmark validity</a><ul>
+<li><a href="#71-some-throughput-runs-deliberately-standardize-acceptance">7.1 Some throughput runs deliberately standardize acceptance</a></li>
+<li><a href="#72-validity-has-multiple-gates">7.2 Validity has multiple gates</a></li>
+</ul>
+</li>
+<li><a href="#8-one-concrete-inferencex-job-from-yaml-to-artifacts">8. One concrete InferenceX job from YAML to artifacts</a><ul>
 <li><a href="#accuracy-evaluation-is-an-additional-lane">Accuracy evaluation is an additional lane</a></li>
 </ul>
 </li>
-<li><a href="#8-from-a-raw-request-to-a-dashboard-point">8. From a raw request to a dashboard point</a><ul>
-<li><a href="#81-the-artifact-to-chart-data-lineage">8.1 The artifact-to-chart data lineage</a></li>
-<li><a href="#82-what-a-ui-click-does-today">8.2 What a UI click does today</a></li>
-<li><a href="#83-what-is-worth-extracting">8.3 What is worth extracting</a></li>
+<li><a href="#9-from-a-raw-request-to-a-dashboard-point">9. From a raw request to a dashboard point</a><ul>
+<li><a href="#91-the-artifact-to-chart-data-lineage">9.1 The artifact-to-chart data lineage</a></li>
+<li><a href="#92-what-a-ui-click-does-today">9.2 What a UI click does today</a></li>
+<li><a href="#93-what-is-worth-extracting">9.3 What is worth extracting</a></li>
 </ul>
 </li>
-<li><a href="#9-vlm-support-what-exists-and-what-you-must-add">9. VLM support: what exists and what you must add</a><ul>
-<li><a href="#91-existing-support-is-in-the-general-harness">9.1 Existing support is in the general harness</a></li>
-<li><a href="#92-a-vision-capable-model-label-does-not-certify-a-vision-workload">9.2 A vision-capable model label does not certify a vision workload</a></li>
+<li><a href="#10-vlm-support-what-exists-and-what-you-must-add">10. VLM support: what exists and what you must add</a><ul>
+<li><a href="#101-existing-support-is-in-the-general-harness">10.1 Existing support is in the general harness</a></li>
+<li><a href="#102-a-vision-capable-model-label-does-not-certify-a-vision-workload">10.2 A vision-capable model label does not certify a vision workload</a></li>
 </ul>
 </li>
-<li><a href="#10-the-vlm-serving-path-you-need-to-measure">10. The VLM serving path you need to measure</a><ul>
-<li><a href="#101-image-resolution-is-workload-not-decoration">10.1 Image resolution is workload, not decoration</a></li>
-<li><a href="#102-there-are-several-caches-to-distinguish">10.2 There are several caches to distinguish</a></li>
-<li><a href="#103-memory-and-serving-topology">10.3 Memory and serving topology</a></li>
-<li><a href="#104-why-short-visual-actions-expose-ttft">10.4 Why short visual actions expose TTFT</a></li>
+<li><a href="#11-the-vlm-serving-path-you-need-to-measure">11. The VLM serving path you need to measure</a><ul>
+<li><a href="#111-image-resolution-is-workload-not-decoration">11.1 Image resolution is workload, not decoration</a></li>
+<li><a href="#112-there-are-several-caches-to-distinguish">11.2 There are several caches to distinguish</a></li>
+<li><a href="#113-memory-and-serving-topology">11.3 Memory and serving topology</a></li>
+<li><a href="#114-why-short-visual-actions-expose-ttft">11.4 Why short visual actions expose TTFT</a></li>
 </ul>
 </li>
-<li><a href="#11-design-the-three-experiments-separately">11. Design the three experiments separately</a><ul>
-<li><a href="#111-experiment-a-image-serving-characterization">11.1 Experiment A: image-serving characterization</a></li>
-<li><a href="#112-experiment-b-recorded-visual-agent-replay">11.2 Experiment B: recorded visual-agent replay</a></li>
-<li><a href="#113-experiment-c-a-live-image-agent-loop">11.3 Experiment C: a live image-agent loop</a></li>
+<li><a href="#12-design-the-three-experiments-separately">12. Design the three experiments separately</a><ul>
+<li><a href="#121-experiment-a-image-serving-characterization">12.1 Experiment A: image-serving characterization</a></li>
+<li><a href="#122-experiment-b-recorded-visual-agent-replay">12.2 Experiment B: recorded visual-agent replay</a></li>
+<li><a href="#123-experiment-c-a-live-image-agent-loop">12.3 Experiment C: a live image-agent loop</a></li>
 </ul>
 </li>
-<li><a href="#12-a-worked-visual-agent-task-and-its-trace">12. A worked visual-agent task and its trace</a><ul>
+<li><a href="#13-a-worked-visual-agent-task-and-its-trace">13. A worked visual-agent task and its trace</a><ul>
 <li><a href="#capture-contract">Capture contract</a></li>
 <li><a href="#example-observed-request-record">Example observed request record</a></li>
 </ul>
 </li>
-<li><a href="#13-result-metrics-designed-for-real-image-agents">13. Result metrics designed for real image agents</a><ul>
-<li><a href="#131-primary-outcomes-and-denominators">13.1 Primary outcomes and denominators</a></li>
-<li><a href="#132-secondary-diagnostics">13.2 Secondary diagnostics</a></li>
-<li><a href="#133-compare-within-comparable-cohorts">13.3 Compare within comparable cohorts</a></li>
+<li><a href="#14-result-metrics-designed-for-real-image-agents">14. Result metrics designed for real image agents</a><ul>
+<li><a href="#141-primary-outcomes-and-denominators">14.1 Primary outcomes and denominators</a></li>
+<li><a href="#142-secondary-diagnostics">14.2 Secondary diagnostics</a></li>
+<li><a href="#143-compare-within-comparable-cohorts">14.3 Compare within comparable cohorts</a></li>
 </ul>
 </li>
-<li><a href="#14-extract-the-representation-layer-at-explicit-seams">14. Extract the representation layer at explicit seams</a><ul>
-<li><a href="#141-what-to-reuse-wrap-or-replace">14.1 What to reuse, wrap, or replace</a></li>
-<li><a href="#142-suggested-package-boundaries">14.2 Suggested package boundaries</a></li>
-<li><a href="#143-store-evidence-once-derive-views-reproducibly">14.3 Store evidence once; derive views reproducibly</a></li>
+<li><a href="#15-extract-the-representation-layer-at-explicit-seams">15. Extract the representation layer at explicit seams</a><ul>
+<li><a href="#151-what-to-reuse-wrap-or-replace">15.1 What to reuse, wrap, or replace</a></li>
+<li><a href="#152-suggested-package-boundaries">15.2 Suggested package boundaries</a></li>
+<li><a href="#153-store-evidence-once-derive-views-reproducibly">15.3 Store evidence once; derive views reproducibly</a></li>
 </ul>
 </li>
-<li><a href="#15-the-ui-to-build-for-your-purpose">15. The UI to build for your purpose</a><ul>
-<li><a href="#151-comparison-view">15.1 Comparison view</a></li>
-<li><a href="#152-point-detail-view">15.2 Point-detail view</a></li>
-<li><a href="#153-causal-task-timeline">15.3 Causal task timeline</a></li>
-<li><a href="#154-export-contract">15.4 Export contract</a></li>
+<li><a href="#16-the-ui-to-build-for-your-purpose">16. The UI to build for your purpose</a><ul>
+<li><a href="#161-comparison-view">16.1 Comparison view</a></li>
+<li><a href="#162-point-detail-view">16.2 Point-detail view</a></li>
+<li><a href="#163-causal-task-timeline">16.3 Causal task timeline</a></li>
+<li><a href="#164-export-contract">16.4 Export contract</a></li>
 </ul>
 </li>
-<li><a href="#16-ui-to-run-flow-for-your-toolbox">16. UI-to-run flow for your toolbox</a></li>
-<li><a href="#17-practical-starting-point-a-vlm-endpoint-and-aiperf">17. Practical starting point: a VLM endpoint and AIPerf</a><ul>
-<li><a href="#171-pin-the-harness-you-are-studying">17.1 Pin the harness you are studying</a></li>
-<li><a href="#172-start-the-chosen-server-separately">17.2 Start the chosen server separately</a></li>
-<li><a href="#173-two-real-image-serving-inputs">17.3 Two real-image serving inputs</a></li>
-<li><a href="#174-promote-the-smoke-test-to-a-benchmark">17.4 Promote the smoke test to a benchmark</a></li>
+<li><a href="#17-ui-to-run-flow-for-your-toolbox">17. UI-to-run flow for your toolbox</a></li>
+<li><a href="#18-practical-starting-point-a-vlm-endpoint-and-aiperf">18. Practical starting point: a VLM endpoint and AIPerf</a><ul>
+<li><a href="#181-pin-the-harness-you-are-studying">18.1 Pin the harness you are studying</a></li>
+<li><a href="#182-start-the-chosen-server-separately">18.2 Start the chosen server separately</a></li>
+<li><a href="#183-two-real-image-serving-inputs">18.3 Two real-image serving inputs</a></li>
+<li><a href="#184-promote-the-smoke-test-to-a-benchmark">18.4 Promote the smoke test to a benchmark</a></li>
 </ul>
 </li>
-<li><a href="#18-experiment-plan-and-acceptance-criteria">18. Experiment plan and acceptance criteria</a><ul>
+<li><a href="#19-experiment-plan-and-acceptance-criteria">19. Experiment plan and acceptance criteria</a><ul>
 <li><a href="#phase-1-prove-measurement-correctness">Phase 1: prove measurement correctness</a></li>
 <li><a href="#phase-2-characterize-image-serving">Phase 2: characterize image serving</a></li>
 <li><a href="#phase-3-validate-visual-replay-semantics">Phase 3: validate visual replay semantics</a></li>
@@ -118,8 +134,8 @@ h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.025em}h2{font-fami
 <li><a href="#practical-matrix-for-screenshots-and-documents">Practical matrix for screenshots and documents</a></li>
 </ul>
 </li>
-<li><a href="#19-the-decisions-this-study-supports">19. The decisions this study supports</a></li>
-<li><a href="#20-evidence-limitations-and-source-map">20. Evidence, limitations, and source map</a><ul>
+<li><a href="#20-the-decisions-this-study-supports">20. The decisions this study supports</a></li>
+<li><a href="#21-evidence-limitations-and-source-map">21. Evidence, limitations, and source map</a><ul>
 <li><a href="#source-reading-map">Source-reading map</a></li>
 </ul>
 </li>
@@ -129,7 +145,7 @@ h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.025em}h2{font-fami
 </div>
 <p class="nav-note">Three experiments:<br>image serving → visual replay → live agent evaluation.<br><br>Verified mechanics and proposed extensions are identified in the text. Sources use pinned revisions.</p></aside><main><h1 id="inferencex-agentx-and-an-image-agent-benchmark-you-can-build">InferenceX, AgentX, and an image-agent benchmark you can build</h1>
 <p>A code-level study of workload reconstruction, replay scheduling, measurement, serving, evaluation, and reusable result visualization.</p>
-<p><strong>Revision 2 · 24 September 2026.</strong> Focus: image-based agents that read screenshots and documents and invoke tools. This replaces the earlier architecture overview. <strong>Verified implementation</strong>, <strong>interpretation</strong>, and <strong>proposed design</strong> are distinguished throughout. No GPU benchmark or live agent evaluation was run for this study; numerical teaching examples are explicitly illustrative.</p>
+<p><strong>Revision 3 · 24 September 2026.</strong> Focus: image-based agents that read screenshots and documents and invoke tools. This replaces the earlier architecture overview. <strong>Verified implementation</strong>, <strong>interpretation</strong>, and <strong>proposed design</strong> are distinguished throughout. No GPU benchmark or live agent evaluation was run for this study; numerical teaching examples are explicitly illustrative.</p>
 <h2 id="1-the-answer-for-your-use-case">1. The answer for your use case</h2>
 <p>You can reuse a substantial part of this toolbox, but the useful boundary is wider than the dashboard and narrower than the entire InferenceX deployment. Reuse the streaming measurement client, artifact contracts, metric-reduction patterns, experiment provenance, and diagnostic visualizations. Add a real image workload, image-aware measurement, and a task evaluator. For live visual agents, also add the environment/action loop that changes the next observation according to the model's actual output.</p>
 <p><strong>Canonical AgentX is a serving-system benchmark driven by reconstructed coding-agent traces. It does not, by itself, tell you whether a visual agent understood a screenshot or completed a task.</strong> Its default replay preserves recorded workload structure while synthesizing the content. Model outputs are timed, but the next recorded conversation does not depend on whether those outputs made sense. The separate evaluation machinery in InferenceX can grade tasks; it is a different execution path. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace.py">Trace reconstruction</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/benchmark_lib.sh">Replay configuration</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/docs/eval-agentx-procedures.md">Evaluation procedures</a></p>
@@ -169,7 +185,7 @@ h1{font-family:Georgia,serif;font-weight:500;letter-spacing:-.025em}h2{font-fami
 <h3 id="what-was-inspected">What was inspected</h3>
 <p>The study follows InferenceX commit <code>5abd17e2ef546bd557608b370a8ff6123a170cbf</code>, InferenceX-app commit <code>b710865c22e631d1cf0420f029afbd950ee73bb8</code>, and the exact harness gitlink <code>754356e9a39acc6cc6afb242d123bb57c3fb6f75</code>. The website now links a separately named <a href="https://github.com/SemiAnalysisAI/agentx-harness">AgentX Harness repository</a>, inspected at <code>56a0cf70f4c0359454ee4bd15a17770b541a3e3e</code>. Six critical scenario, loader, scheduler, and chat-endpoint files were byte-identical between that checkout and the InferenceX-pinned harness. This does not assert that their entire trees are identical.</p>
 <p>The local gitlink remains under <code>utils/aiperf</code>, and the package/command is still named <code>aiperf</code>. Do not assume that an arbitrary <code>pip install aiperf</code> release is the exact harness used by a published InferenceX point. Pin the source revision and resolved dependencies. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/.gitmodules">Submodule declaration</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/pyproject.toml">Harness package metadata</a></p>
-<p><strong>Reading route:</strong> sections 2–8 explain the existing benchmark; 9–11 explain what changes for vision; 12–16 define the toolbox and result representation to build; 17–19 give runnable command templates, experiment controls, and implementation milestones.</p>
+<p><strong>Reading route:</strong> sections 2–9 explain the existing benchmark, with agent creation, orchestration, and traffic in chapter 5; 10–12 explain what changes for vision; 13–17 define the toolbox and result representation to build; 18–20 give command templates, experiment controls, and implementation milestones.</p>
 <h2 id="2-architecture-four-responsibilities-three-codebases">2. Architecture: four responsibilities, three codebases</h2>
 <p><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1160" height="820" viewBox="0 0 1160 820" role="img" aria-labelledby="title desc"><title id="title">AgentX execution and VLM adaptation</title><desc id="desc">The existing benchmark separates orchestration, traffic generation, model serving and result publication. A proposed VLM extension adds real assets, live environments and task scoring.</desc><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#55707a"/></marker></defs><rect width="1160" height="820" fill="#f5f8f5"/><text x="28" y="34" font-family="Arial,sans-serif" font-size="14" fill="#086d69" font-weight="700" text-anchor="start">VERIFIED EXISTING SYSTEM</text><rect x="28" y="62" width="250" height="126" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">InferenceX operator</text><text x="42" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">YAML → validated matrix</text><text x="42" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Actions → self-hosted runner</text><text x="42" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Serving image + topology</text><text x="42" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Exact command + run identity</text><rect x="326" y="62" width="330" height="126" rx="5" fill="white" stroke="#c5d5d5"/><text x="340" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">AgentX Harness / AIPerf</text><text x="340" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Weka counts + hashes → text</text><text x="340" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">t* → warmup → tree replay</text><text x="340" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Streaming HTTP + timestamps</text><text x="340" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Metrics + phase-tagged records</text><rect x="720" y="62" width="410" height="126" rx="5" fill="white" stroke="#c5d5d5"/><text x="734" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">System under test</text><text x="734" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Router / serving engine / accelerator fleet</text><text x="734" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Prefix/KV cache + optional CPU offload</text><text x="734" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Prefill + decode; optional speculation</text><text x="734" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Client output is measured, not task-scored</text><path d="M282 122L320 122" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M661 122L714 122" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><rect x="326" y="250" width="330" height="117" rx="5" fill="white" stroke="#c5d5d5"/><text x="340" y="277" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Raw evidence + reducers</text><text x="340" y="301" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Profile JSONL + harness aggregate</text><text x="340" y="322" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Server metrics + power + logs</text><text x="340" y="343" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Success/error/warmup accounting</text><rect x="720" y="250" width="410" height="117" rx="5" fill="white" stroke="#c5d5d5"/><text x="734" y="277" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">InferenceX-app</text><text x="734" y="301" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Ingest → database + versioned projections</text><text x="734" y="322" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">APIs → comparison / distributions / timeline</text><text x="734" y="343" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Point links back to run and artifacts</text><path d="M491 193L491 244" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M661 308L714 308" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M925 192V225H660V287" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><text x="28" y="405" font-family="Arial,sans-serif" font-size="14" fill="#956119" font-weight="700" text-anchor="start">PROPOSED VLM TOOLBOX — additional components; not an existing AgentX feature</text><rect x="28" y="431" width="270" height="148" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="458" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Immutable workload</text><text x="42" y="482" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Real screenshots / document pages</text><text x="42" y="503" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Messages + tool schemas + results</text><text x="42" y="524" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Geometry + transforms + hashes</text><text x="42" y="545" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Task ground truth held by evaluator</text><text x="42" y="566" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Dataset and environment versions</text><rect x="348" y="431" width="330" height="148" rx="5" fill="white" stroke="#c5d5d5"/><text x="362" y="458" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Choose the experiment</text><text x="362" y="482" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">A  Image-serving load test</text><text x="362" y="503" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">B  Recorded visual-agent replay</text><text x="362" y="524" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">C  Live model → action → observation</text><text x="362" y="545" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">A/B: fixed workload where declared</text><text x="362" y="566" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">C: actual outputs change trajectory</text><rect x="730" y="431" width="400" height="148" rx="5" fill="white" stroke="#c5d5d5"/><text x="744" y="458" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">VLM deployment</text><text x="744" y="482" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Preprocess → image encoder → LM</text><text x="744" y="503" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Separate image/processor/KV cache states</text><text x="744" y="524" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Natural decoding for quality evaluation</text><text x="744" y="545" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Optional internal spans; unknown ≠ zero</text><text x="744" y="566" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Measure transport and action-ready time</text><path d="M303 505L342 505" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M683 505L724 505" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><rect x="348" y="646" width="330" height="113" rx="5" fill="white" stroke="#c5d5d5"/><text x="362" y="673" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Task evaluator + metric reducers</text><text x="362" y="697" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Success, deadline, latency, cost</text><text x="362" y="718" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Request/image/tool diagnostics</text><text x="362" y="739" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Population + version + exclusions</text><rect x="730" y="646" width="400" height="113" rx="5" fill="white" stroke="#c5d5d5"/><text x="744" y="673" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Reusable result representation</text><text x="744" y="697" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Comparison point → run → task → request</text><text x="744" y="718" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Image + action overlay + before/after state</text><text x="744" y="739" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Telemetry + evaluator evidence + artifacts</text><path d="M513 583L513 640" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M683 704L724 704" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><text x="28" y="797" font-family="Arial,sans-serif" font-size="15" fill="#17303b" font-weight="700" text-anchor="start">Existing public UI reads results. Your proposed Run experiment action would submit an explicit job.</text></svg></div></p>
 <p>The benchmark repository, harness, model server, and result application have distinct jobs:</p>
@@ -229,8 +245,252 @@ The server receives the accumulated conversation, not just hash 14.
 <p>General AIPerf supports forked context as well as fresh spawned conversations. The inspected Weka path represents its subagents as spawns. Also distinguish the client's worker affinity, which helps maintain conversation state, from server/router affinity, which determines where the reusable model KV lives. They operate at different layers. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/strategies/agentic_replay.py">Replay strategy</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/session_manager.py">Worker state</a></p>
 <h3 id="47-stop-drain-and-export">4.7 Stop, drain, and export</h3>
 <p>The profile duration bounds admission; in-flight work and export can add time afterward. Warmup, preparation, drain, and measurement are separate intervals. Raw timestamps determine which denominator a metric uses. Short runs made with <code>--unsafe-override</code> are useful integration smoke tests but carry <code>submission_valid=false</code> under the scenario. Canonical scenario duration must be at least 900 seconds; the scenario defaults to 1,800 seconds, while the InferenceX matrix's normal agentic duration defaults to 3,600 seconds. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/inferencex_agentx_mvp.py">Scenario</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/matrix/validation.py">Matrix defaults</a></p>
-<h2 id="5-what-is-measured-with-exact-arithmetic">5. What is measured, with exact arithmetic</h2>
-<h3 id="51-a-request-has-several-different-timestamps">5.1 A request has several different timestamps</h3>
+<h2 id="5-how-agents-are-created-orchestrated-and-turned-into-traffic">5. How agents are created, orchestrated, and turned into traffic</h2>
+<p>This chapter follows the actual runtime objects and events. The word <strong>agent</strong> is overloaded: a real application agent makes decisions and acts; an AgentX replay agent is a scheduled conversation stream reconstructed from a capture. A benchmark worker is a process that sends requests, and a model replica is a server deployment. These four things need not have a one-to-one relationship.</p>
+<h3 id="51-what-creating-an-agent-means-in-this-harness">5.1 What “creating an agent” means in this harness</h3>
+<p>AgentX does not create a new intelligent program, provision a new model, or start a Docker container for every recorded subagent. The loader creates <strong>conversation templates</strong>. At execution time the conversation source creates <strong>session instances</strong> from those templates. The workers materialize session history and send its turns to an already running inference service. Several sessions and children can use one worker and the same served model. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/conversation_source.py">Conversation creation</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/worker.py">Worker execution</a></p>
+<p>The levels are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Created from</th>
+<th>Lifetime and purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Captured trace</td>
+<td>Original recorded application traffic</td>
+<td>Source evidence of observed request shapes, timestamps, and subagent markers</td>
+</tr>
+<tr>
+<td>Conversation template</td>
+<td>Loader reconstruction</td>
+<td>Reusable sequence of turns, model labels, timing, branches, and prerequisites</td>
+</tr>
+<tr>
+<td>Replay session</td>
+<td><code>ConversationSource.next()</code> or <code>start_branch_child()</code></td>
+<td>One execution instance, identified by a new <code>x_correlation_id</code></td>
+</tr>
+<tr>
+<td>Session tree</td>
+<td>A root and all descendants</td>
+<td>Owns one configured replay-concurrency slot until all work terminates</td>
+</tr>
+<tr>
+<td>Credit</td>
+<td>One eligible turn</td>
+<td>Permission and metadata for one inference request; not a billing credit</td>
+</tr>
+<tr>
+<td>Worker <code>UserSession</code></td>
+<td>Conversation template plus current runtime identity</td>
+<td>Client-side history and turn position kept across requests</td>
+</tr>
+<tr>
+<td>HTTP request</td>
+<td>Endpoint serialization of that turn/history</td>
+<td>The actual model-serving work whose latency and output are measured</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>conversation_id</code> names the reusable dataset template. <code>x_correlation_id</code> names this particular execution. A child gets its own correlation ID, the immediate parent's correlation ID, the tree's root correlation ID, and <code>agent_depth = parent_depth + 1</code>. Replaying the same source trace twice creates distinct execution identities. Grouping only by source ID would merge separate executions and corrupt concurrency and latency analysis. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/conversation_source.py">Session creation</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/structs.py">Credit fields</a></p>
+<p>For a live VLM agent, creation has an additional meaning: initialize an agent policy, instructions, model route, tool registry, working memory, task/environment identity, budgets, and termination rules. That policy will interpret actual model outputs. These proposed application objects are not supplied by creating an AgentX <code>SampledSession</code>.</p>
+<h3 id="52-how-the-loader-reconstructs-parentchild-relationships">5.2 How the loader reconstructs parent/child relationships</h3>
+<p>The Weka loader emits a root conversation and child conversations for captured subagent entries. It can split a captured agent into several context chains using hash-prefix relationships; one captured subagent marker can therefore yield several replay conversations. A replay conversation count is not automatically the original application's count of independently reasoning agents. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace.py">Weka loader</a></p>
+<p>For an explicit captured subagent, the loader finds the preceding retained parent turn in the recorded entry order. That turn gets a branch ID. It then finds the first later parent turn whose recorded start reaches or exceeds the child's recorded end, using a small equality tolerance. That later turn gets a <code>SPAWN_JOIN</code> prerequisite. Children with the same spawning turn and joining turn can share a branch group.</p>
+<p>For example, if children A, B, and C end at recorded times 6, 12.5, and 24, while later parent turns start at 6 and 20, A gates the first later parent turn, B gates the second, and C is background work. The parent need not wait for B before continuing the turn gated only by A. If no retained parent turn precedes an explicit subagent, the loader drops that orphan rather than inventing a spawn point. Detected flat chains use their own fallback rules; do not generalize the explicit-subagent rule to every reconstructed stream.</p>
+<p>This is <strong>reconstructed dependency structure</strong>. It is not proof that the original program issued an explicit <code>await child_A</code> at that exact point, or that the benchmark recovered the application's source-level plan. For your own VLM captures, record explicit spawn, await, cancellation, and tool-result-consumption events so fewer dependencies must be inferred.</p>
+<h3 id="53-three-orchestration-layers-operate-independently">5.3 Three orchestration layers operate independently</h3>
+<p><strong>Experiment orchestration</strong> chooses model/configuration combinations, obtains hardware, starts serving, launches the client, and publishes artifacts. InferenceX workflows and recipes own this layer.</p>
+<p><strong>Replay orchestration</strong> chooses session templates, advances phases, tracks dependency gates, issues requests, and recycles drained lanes. <code>AgenticReplayStrategy</code>, <code>BranchOrchestrator</code>, <code>ReplayBarrierCoordinator</code>, the credit components, and <code>SessionTreeRegistry</code> own this layer.</p>
+<p><strong>Model-server scheduling</strong> admits requests to execution, batches prefill/decode work, allocates KV cache, and routes distributed computation. The inference engine owns this layer. A server can batch unrelated replay agents together; the replay parent/child structure does not itself create GPU isolation.</p>
+<p>The optional live <strong>application-agent orchestrator</strong> would decide which tools or agents to call based on actual answers and observations. That is a fourth responsibility to add for task evaluation. Neither a GitHub Actions job nor a GPU batch scheduler replaces it.</p>
+<p><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1160" height="955" viewBox="0 0 1160 955" role="img" aria-labelledby="title desc"><title id="title">Agent orchestration and request traffic</title><desc id="desc">The replay controller schedules logical conversations through credits, worker sessions and an existing model endpoint. The illustrative timeline shows one tree producing three simultaneous requests and retaining its slot after the parent completes.</desc><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#55707a"/></marker></defs><rect width="1160" height="955" fill="#f5f8f5"/><text x="28" y="34" font-family="Arial,sans-serif" font-size="14" fill="#086d69" font-weight="700" text-anchor="start">VERIFIED CONTROL AND EXECUTION PATH</text><rect x="28" y="62" width="260" height="125" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Templates → session instances</text><text x="42" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">ConversationSource / UUID</text><text x="42" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Root + parent + branch identity</text><text x="42" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Recorded turns and dependencies</text><text x="42" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">No per-agent model/container</text><rect x="339" y="62" width="365" height="125" rx="5" fill="white" stroke="#c5d5d5"/><text x="353" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Replay controller</text><text x="353" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Timers + BranchOrchestrator joins</text><text x="353" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">ReplayBarrierCoordinator predecessors</text><text x="353" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">CreditIssuer + client concurrency</text><text x="353" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">SessionTreeRegistry owns slot release</text><rect x="757" y="62" width="375" height="125" rx="5" fill="white" stroke="#c5d5d5"/><text x="771" y="89" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Sticky router → worker</text><text x="771" y="113" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">One credit per request; async execution</text><text x="771" y="134" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">UserSession holds client history</text><text x="771" y="155" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Endpoint adapter → HTTP model server</text><text x="771" y="176" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Worker is not the logical agent</text><path d="M293 121L333 121" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M709 121L751 121" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M940 192V225H521V193" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><text x="728" y="249" font-family="Arial,sans-serif" font-size="14" fill="#55707a" font-weight="400" text-anchor="middle">CreditReturn → gates / continuation / drain</text><text x="28" y="307" font-family="Arial,sans-serif" font-size="14" fill="#956119" font-weight="700" text-anchor="start">ILLUSTRATIVE TRAFFIC / one tree lane; authored branch example, not measured Weka traffic</text><path d="M185 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="185" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">0s</text><path d="M273 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="273" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">2s</text><path d="M405 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="405" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">5s</text><path d="M493 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="493" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">7s</text><path d="M581 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="581" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">9s</text><path d="M669 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="669" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">11s</text><path d="M757 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="757" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">13s</text><path d="M845 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="845" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">15s</text><path d="M1065 345V684" stroke="#c5d5d5" stroke-dasharray="3 5"/><text x="1065" y="333" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">20s</text><text x="28" y="396" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Parent</text><rect x="185" y="373" width="88" height="38" rx="4" fill="#086d69"/><text x="229.0" y="397" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">P0</text><rect x="493" y="373" width="88" height="38" rx="4" fill="#086d69"/><text x="537.0" y="397" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">P1</text><rect x="669" y="373" width="88" height="38" rx="4" fill="#086d69"/><text x="713.0" y="397" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">P2</text><text x="28" y="476" font-family="Arial,sans-serif" font-size="16" fill="#448581" font-weight="700" text-anchor="start">Child A</text><rect x="273" y="453" width="132" height="38" rx="4" fill="#448581"/><text x="339.0" y="477" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">A0</text><text x="28" y="556" font-family="Arial,sans-serif" font-size="16" fill="#448581" font-weight="700" text-anchor="start">Child B</text><rect x="317" y="533" width="176" height="38" rx="4" fill="#448581"/><text x="405.0" y="557" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">B0</text><rect x="537" y="533" width="132" height="38" rx="4" fill="#448581"/><text x="603.0" y="557" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">B1</text><text x="28" y="636" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Background C</text><rect x="273" y="613" width="792" height="38" rx="4" fill="#956119"/><text x="669.0" y="637" font-family="Arial,sans-serif" font-size="14" fill="white" font-weight="700" text-anchor="middle">C0</text><text x="493" y="433" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="start">P1 waits for delay AND A</text><text x="669" y="497" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="start">P2 waits for B</text><text x="757" y="687" font-family="Arial,sans-serif" font-size="12" fill="#55707a" font-weight="400" text-anchor="middle">Parent ends at 13</text><text x="1065" y="710" font-family="Arial,sans-serif" font-size="12" fill="#956119" font-weight="700" text-anchor="end">Tree drains at 20</text><rect x="28" y="754" width="342" height="104" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="781" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Tree concurrency = 1</text><text x="42" y="805" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Slot remains held for background C</text><text x="42" y="826" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Replacement root starts only after drain</text><rect x="409" y="754" width="342" height="104" rx="5" fill="white" stroke="#c5d5d5"/><text x="423" y="781" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Peak HTTP in flight = 3</text><text x="423" y="805" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">34 request-seconds / 20 seconds</text><text x="423" y="826" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Average HTTP concurrency = 1.7</text><rect x="790" y="754" width="342" height="104" rx="5" fill="white" stroke="#c5d5d5"/><text x="804" y="781" font-family="Arial,sans-serif" font-size="16" fill="#086d69" font-weight="700" text-anchor="start">Throughput has a unit</text><text x="804" y="805" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">7 requests / 20s = 0.35 requests/s</text><text x="804" y="826" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">1 tree / 20s = 0.05 trees/s</text><text x="28" y="901" font-family="Arial,sans-serif" font-size="16" fill="#17303b" font-weight="700" text-anchor="start">A terminal child satisfies scheduler bookkeeping; it does not establish task correctness.</text><text x="28" y="929" font-family="Arial,sans-serif" font-size="14" fill="#55707a" font-weight="400" text-anchor="start">Live VLM agents additionally interpret actual outputs, execute tools, change observations, and score task state.</text></svg></div></p>
+<h3 id="54-follow-one-request-through-the-execution-pipeline">5.4 Follow one request through the execution pipeline</h3>
+<ol>
+<li><strong>Select or resume a session.</strong> The sampler supplies a root template, or a branch selects a known child template. A new instance carries its replay identity and tree ownership. Startup may resume the t* snapshot instead of turn zero.</li>
+<li><strong>Establish eligibility.</strong> The replay strategy and timer scheduler establish when a turn is due. A parent join checks required children, and recorded cross-stream barriers check predecessor completion. Being present in the dataset does not mean a request can be sent immediately.</li>
+<li><strong>Admit the turn.</strong> <code>CreditIssuer</code> checks stop conditions and obtains the applicable client concurrency slots. A new root takes a session slot; children inherit their tree's slot. An optional prefill limiter applies per request. Final admission is checked again before issuing.</li>
+<li><strong>Create and route the credit.</strong> The credit identifies the phase, conversation, execution, turn, depth, root/parent, issue time, endpoint selection, cache marker, and any generation override. The sticky router chooses a worker and keeps a conversation's turns together.</li>
+<li><strong>Build the request.</strong> On a session miss, the worker retrieves the conversation and creates <code>UserSession</code>. It advances to the requested turn, applies the configured context/history behavior, and lets the endpoint adapter serialize the request. Cache-bust markers and warmup output limits affect this construction.</li>
+<li><strong>Perform streaming inference.</strong> <code>InferenceClient</code> and the transport send HTTP to the server and consume the response stream. The worker creates request timing and result evidence. A first-token control notification is emitted when a downstream control feature requires it; this is separate from retaining stream timing for metrics.</li>
+<li><strong>Return scheduling control.</strong> The worker returns <code>CreditReturn</code> on completion, error, or cancellation. The callback handler updates accounting and releases applicable request-level limits. It routes child terminal outcomes to the branch orchestrator and offers parent completions for branch creation/join handling.</li>
+<li><strong>Continue, wait, or retire.</strong> The next turn is scheduled if eligible; a gated parent waits; a completed tree releases its slot and may recycle. Request records separately enter the records/metrics pipeline for export.</li>
+</ol>
+<p>The worker uses asynchronous tasks for credit execution and a typed messaging path to the router; the inspected router uses ZeroMQ communication. A logical agent is not a dedicated operating-system thread. More workers can improve client throughput, but more workers alone do not create more replay trees. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/issuer.py">Issuer</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/sticky_router.py">Router</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/worker.py">Worker</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/callback_handler.py">Callbacks</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/loop_scheduler.py">Timer scheduler</a></p>
+<h3 id="55-spawn-and-fork-are-different-context-operations">5.5 SPAWN and FORK are different context operations</h3>
+<p><strong>SPAWN</strong> starts a child with its own conversation context. The Weka path uses this mode. It still records the parent and root identities, and may use the parent's worker while its routing entry exists. Shared ancestry does not mean automatic copying of every parent message.</p>
+<p><strong>FORK</strong> starts from the parent's accumulated client history. The generic DAG machinery supports it. Worker affinity and reference counts keep the parent's state available for child seeding. The current session-manager implementation separates creation from <code>seed_from_parent</code>; this matters when following older comments that describe cloning entirely inside <code>create_and_store</code>.</p>
+<p>Forking client history does not clone a GPU process or guarantee a KV-cache hit. The server must receive a compatible prefix and have valid reusable cache state on the selected backend. A client-side worker cache stores conversation objects; a serving-side KV cache stores model activations. They are different caches. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/session_manager.py">Session manager</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">Branch modes and routing</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/sticky_router.py">Sticky entries</a></p>
+<p>The replay tree's cache marker also persists through its descendants. This preserves an intended prefix-sharing domain inside one tree while separating repeated source traces across trees. It does not recreate every production router's placement policy.</p>
+<h3 id="56-exactly-when-does-a-child-start">5.6 Exactly when does a child start?</h3>
+<p>The common path intercepts completion of a parent turn, reads that turn's declared branch IDs, creates child session instances, registers their dependency gates, and dispatches their first turns. <strong>Registration precedes dispatch</strong> so a child that finishes quickly cannot satisfy an incompletely registered join or prematurely drain a tree. Pending delayed children count as outstanding work before their first HTTP request begins. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">Branch dispatch</a></p>
+<p>SPAWN children may have a recorded offset between branch creation and their first request. The scheduler preserves that offset. FORK children need the parent's completed response/history and start through the completion path.</p>
+<p>There is also an important overlap path: <code>BranchOrchestrator.on_credit_issued()</code> can schedule SPAWN branches when the captured branch began before the declaring root request ended. At the inspected revision it checks a depth-zero parent, replay scope, valid parent timestamps/duration, and SPAWN mode. It schedules relative to the recorded parent start and marks that branch as already dispatched so the eventual return does not spawn it twice. This feature should not be described as arbitrary nested FORK overlap.</p>
+<p>During ordinary cache priming, branch interception is disabled; accelerated warmup enables additional replay advancement. Thus “child starts after parent completion” is an incomplete description across all phases and trace shapes.</p>
+<h3 id="57-joins-have-both-a-dependency-condition-and-a-time-condition">5.7 Joins have both a dependency condition and a time condition</h3>
+<p>The branch orchestrator tracks expected and completed child identities for each prerequisite. Completed identities are a set, protecting against duplicate completion notifications. A prerequisite that has not yet been registered does not count as satisfied merely because its current count is zero.</p>
+<p>A parent can keep executing intermediate turns while its children run. It suspends only when its <strong>next</strong> turn is gated by unfinished prerequisites. One child can contribute to more than one gate; a gate can require several branches. This is a directed dependency graph layered over the parent/child ownership tree.</p>
+<p>For a blocked timed join, the parent resumes after <strong>both</strong> all required terminal child outcomes and its replay deadline are ready. Conceptually:</p>
+<pre><code class="language-text">parent eligible time = max(recorded-delay deadline, required-child completion times)
+actual HTTP start    = eligible time + further admission/routing/transport waiting
+</code></pre>
+<p>The equation describes this join boundary, not every timer in the system. Startup snapshots, idle-time compression, interval barriers, server queueing, and stop conditions can introduce other constraints. A background child creates no parent join, but still holds the whole tree's slot until it terminates. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">Join state and release</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/session_tree.py">Tree accounting</a></p>
+<h3 id="58-recorded-interval-barriers-preserve-more-than-explicit-joins">5.8 Recorded interval barriers preserve more than explicit joins</h3>
+<p>The Weka loader also installs cross-stream <code>replay_predecessors</code>. Within each replay scope, it examines recorded request intervals. For another stream, the latest request known to have completed by the target's recorded start can become a predecessor; redundant predecessors are pruned. Overlapping intervals do not generate that completion edge. Exact end/start boundaries are ordered, while equal starts remain unordered. Missing or invalid durations follow a deterministic zero-duration fallback. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace.py">Dependency installation</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/replay_dependencies.py">Interval inference</a></p>
+<p>Consider a long request A0 spanning seconds 0–10 and another stream with B0 at 2–3 and B1 at 4–5. Both B requests overlap A0. B1 should follow B0 without being forced to wait for A0. A later B2 beginning at 10 can depend on A0. Collapsing every connected overlap into one simultaneous burst would misrepresent this traffic.</p>
+<p><code>ReplayBarrierCoordinator</code> maintains the completed frontier and pending dispatches <strong>per runtime root</strong>, so replaying the same source twice does not share completion state. The phase runner wires these barriers for <code>AGENTIC_REPLAY</code>; activation/handoff logic separates ordinary cache priming from subsequent replay. Scope boundaries also matter: explicit captured subagent contexts can have separate interval scopes from the top-level reconstructed streams. The loader does not infer every possible pairwise ordering across unrelated agents. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/phase/runner.py">Phase wiring</a></p>
+<p>These inferred edges preserve recorded ordering; they do not prove semantic causality. A later request might have happened after another request without consuming its result. Your proposed visual trace format should preserve an <code>edge_origin</code> such as <code>explicit_tool_dependency</code>, <code>explicit_agent_join</code>, or <code>inferred_recorded_interval</code> so readers can distinguish the evidence.</p>
+<p>The included <code>agent-traffic-walkthrough.json</code> checks the interval example using the exact source definitions of <code>infer_cross_stream_predecessors</code> and its data classes, extracted without changing them. This is an algorithm check, not a full replay run.</p>
+<h3 id="59-a-complete-timed-example-one-tree-seven-requests">5.9 A complete timed example: one tree, seven requests</h3>
+<p>The following <strong>illustrative authored branch scenario</strong> isolates the scheduling concepts. It assumes no extra interval barriers, startup warmup, idle compression, retries, or client/server queue delays. It is not a measured Weka trace. All times are seconds after this example's start; intervals are half-open.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Stream / request</th>
+<th>Start–end</th>
+<th>Why it can start</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parent P0</td>
+<td>0–2</td>
+<td>Root admitted; one tree slot acquired</td>
+</tr>
+<tr>
+<td>Child A0</td>
+<td>2–5</td>
+<td>Fresh child from P0; gates P1</td>
+</tr>
+<tr>
+<td>Child B0</td>
+<td>3–7</td>
+<td>Child first-request offset of one second; gates P2 after its final turn</td>
+</tr>
+<tr>
+<td>Child B1</td>
+<td>8–11</td>
+<td>B0 finishes, then one second of recorded idle</td>
+</tr>
+<tr>
+<td>Background C0</td>
+<td>2–20</td>
+<td>Fresh background child; no parent join</td>
+</tr>
+<tr>
+<td>Parent P1</td>
+<td>7–9</td>
+<td>Five-second delay after P0 ends; A has already finished at 5</td>
+</tr>
+<tr>
+<td>Parent P2</td>
+<td>11–13</td>
+<td>One-second delay after P1 would permit 10, but B finishes at 11</td>
+</tr>
+</tbody>
+</table></div>
+<p>At time 4, A0, B0, and C0 are simultaneous HTTP requests even though configured tree concurrency is <strong>one</strong>. At time 8.5, P1, B1, and C0 overlap. The parent finishes at 13, but C0 keeps the tree alive until 20. Starting a replacement root at 13 would violate the one-tree limit.</p>
+<p>The seven request durations sum to 34 request-seconds. Across this 20-second interval, average in-flight HTTP requests are <code>34 / 20 = 1.7</code>; peak in-flight requests are 3; completed request throughput is <code>7 / 20 = 0.35 requests/s</code>; tree completion throughput is <code>1 / 20 = 0.05 trees/s</code>. These are four different quantities. The example's mean request duration is <code>34 / 7 ≈ 4.857 seconds</code>; multiplying that by request throughput recovers 1.7. This finite-window accounting identity works here because every request is wholly contained in the window. Production windows need explicit treatment of requests crossing their boundaries.</p>
+<p>If the model takes longer on B1, P2 may start later. If it takes longer on background C0, the next tree starts later even though the parent's answer time may stay unchanged. If P1 becomes very fast, P2 can still be dominated by B's completion. That is why an average token rate alone does not explain agent-traffic capacity.</p>
+<h3 id="510-failures-cancellation-and-termination-are-part-of-orchestration">5.10 Failures, cancellation, and termination are part of orchestration</h3>
+<p>The harness distinguishes a child dispatch that was issued, deferred, or rejected. Deferral retains dependency tracking for later issuance or phase handoff. Terminal refusal must drain the tracking state; otherwise a parent could wait forever for a request that will never be sent. A child truncated by a stop condition is counted separately from a normally completed child. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/dispatch.py">Dispatch results</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">Branch cleanup</a></p>
+<p>The default DAG error policy has <code>AIPERF_DAG_FAIL_FAST=false</code>: a child error is recorded and treated as terminal for join bookkeeping so replay can proceed. Enabling fail-fast uses a different abort path for the affected parent and tracked siblings. Neither policy makes the failed child's answer correct. A released join means the scheduler has accounted for terminal work, not that a business task succeeded. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/environment.py">Error-policy defaults</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">Child error handlers</a></p>
+<p>When the root's final turn returns, newly declared children must be registered before <code>on_root_terminal()</code> can consider releasing the tree. The registry releases exactly once after the root is terminal and its outstanding descendants are zero. Phase cleanup cancels pending work, stops new dispatch, and releases remaining resources without launching replacement roots. Context-overflow terminals also need special handling because a conversation can end before its authored final turn. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/callback_handler.py">Callbacks</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/session_tree.py">Registry</a></p>
+<p>For a live visual agent, specify application-level outcomes separately: a failed OCR helper may trigger a retry, fallback model, partial result, or failed task. Retain the actual policy decision and charge all retries to latency and cost. Do not silently translate “child errored, join drained” into “task passed.”</p>
+<h3 id="511-what-determines-agent-traffic-and-how-to-describe-it">5.11 What determines agent traffic and how to describe it</h3>
+<p>Agent traffic is an evolving mix of <strong>arrivals, payloads, dependencies, and feedback</strong>. Important dimensions include:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Record or derive</th>
+<th>Why it changes serving performance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tree arrivals and admission</td>
+<td>Scheduled/start times, external queue wait, live-tree occupancy</td>
+<td>Closed-loop replenishment reacts to completion; external arrivals can keep accumulating</td>
+</tr>
+<tr>
+<td>Fan-out and depth</td>
+<td>Children per spawn, active children, tree depth, join width</td>
+<td>Bursts can exceed the configured root-concurrency count</td>
+</tr>
+<tr>
+<td>Turns and context growth</td>
+<td>Requests per stream/tree; input/output lengths by turn; resets/compaction</td>
+<td>Later turns can create more prefill, cache, and memory pressure</td>
+</tr>
+<tr>
+<td>Timing and dependencies</td>
+<td>Inter-turn gap, delayed spawn, parent blocked time, background tail</td>
+<td>Exposes the critical path and periods where capacity is occupied without model work</td>
+</tr>
+<tr>
+<td>Prefix reuse</td>
+<td>Shared instruction/history blocks; eviction; worker and backend route</td>
+<td>Influences how much context is recomputed and where cache can be reused</td>
+</tr>
+<tr>
+<td>Model mix</td>
+<td>Recorded source model, resolved served model, endpoint and role</td>
+<td>Remapping every helper to one model changes the workload's execution cost</td>
+</tr>
+<tr>
+<td>Visual load</td>
+<td>Image count, bytes, resolution, pages/patches, processing settings</td>
+<td>Text token counts alone do not describe encoder or preprocessing load</td>
+</tr>
+<tr>
+<td>Tools and environment</td>
+<td>Tool type, duration, error, state change, observation size</td>
+<td>Tools create waits and the next request's content; live behavior creates feedback</td>
+</tr>
+<tr>
+<td>Failure and termination</td>
+<td>Error, timeout, retry, cancellation, truncation, terminal reason</td>
+<td>Success-only views can hide dropped demand and wasted work</td>
+</tr>
+</tbody>
+</table></div>
+<p>Report concurrency at each layer: admitted trees, active conversation streams, in-flight client HTTP calls, requests waiting inside the server, and requests/tokens the engine actually batches. Optional client prefill concurrency is another control: its slot lasts until first-token notification or terminal fallback, so it is a client-side proxy for outstanding pre-first-token work, not a count of simultaneous GPU prefill kernels. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/concurrency.py">Concurrency manager</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/issuer.py">Issuer and callbacks</a></p>
+<p>A fixed number of replay lanes is a <strong>closed-loop</strong> experiment: slower service reduces how quickly those lanes produce subsequent demand. It measures that population under backpressure. An <strong>open-loop</strong> arrival test supplies a declared external arrival schedule, allowing queues to grow when service falls behind. Neither should be mislabeled as the other. For your application, include both a fixed population of active agents and a separate externally arriving task-load test, reporting requested versus achieved arrival rates and client-generator delay.</p>
+<p>Never claim a repeated synthetic corpus is the complete production distribution. Specify which roles, branch sizes, tool gaps, history lengths, images, and errors were retained or changed. Compare full distributions and cohorts, not only an average request size.</p>
+<h3 id="512-what-a-real-vlm-agent-orchestrator-must-add">5.12 What a real VLM agent orchestrator must add</h3>
+<p>For your screenshot/document use case, a live orchestrator should create an <code>AgentInstance</code> with a task identity, optional parent identity, role, policy version, model route, context store, tool registry, environment handle, deadlines, and request/action budgets. These are proposed application contracts, not classes already implemented by AgentX.</p>
+<p>A concrete live loop is:</p>
+<pre><code class="language-text">admit task and reset environment
+create parent agent and initial observation
+while task is nonterminal and budgets permit:
+    build real messages, image references, and allowed tool definitions
+    call the configured VLM; keep streaming/timing/usage evidence
+    parse and validate a complete action or agent-delegation request
+    if delegation:
+        create child instance(s) with declared fresh/inherited context
+        schedule children with bounded parallelism and explicit join rules
+    elif tool action:
+        execute tool against the task environment; record outcome
+        capture resulting screenshot/document/tool response
+    else:
+        record proposed final answer or terminal error
+    update history from actual outputs and actual environment observations
+    checkpoint causal event identities and evaluate stopping conditions
+score final task state using independent ground truth
+publish task outcome alongside every contributing request and tool event
+</code></pre>
+<p>For a document-to-form task, a parent might delegate page extraction to a document-reader child, use a browser-controller child to populate fields, and wait for a verifier before declaring success. Sharing one browser introduces interference: either serialize mutating actions through an environment owner or give children isolated environments and explicitly merge results. Parallel independent page reading is often simpler to compare than two agents clicking the same mutable screen concurrently. This is a design choice to test, not an assumed optimal architecture.</p>
+<p>The delegation policy can be static (a fixed workflow) or model-driven (the model chooses when and whom to delegate). Record which one is used. A model-driven policy changes fan-out, number of turns, retries, and screenshot history across models, so live comparisons need task-level normalization. You cannot keep the whole trajectory identical and simultaneously claim to evaluate all consequences of the model's choices.</p>
+<p>For the result UI, show a <strong>causal tree with a time axis</strong>. A parent row contains its requests, child spawn/join links, tool spans, screenshots, and terminal score. Separate “ready but queued,” “model request,” “waiting on child,” and “waiting on tool.” Allow a user to select a long task, identify its critical path, open the exact image and action, and inspect the model/server configuration responsible. Show background work after the parent finishes and include its cost according to the declared accounting policy. This is the bridge from InferenceX-style request diagnostics to meaningful image-agent performance analysis.</p>
+<h3 id="513-code-reading-checklist-for-this-mechanism">5.13 Code-reading checklist for this mechanism</h3>
+<p>Start with <code>WekaTraceLoader</code> and <code>_install_replay_dependencies</code>; follow <code>ConversationSource.start_branch_child</code>; inspect <code>BranchOrchestrator.on_credit_issued</code>, <code>intercept</code>, and <code>_spawn_children_and_register_gates</code>; then follow <code>CreditIssuer</code>, <code>StickyCreditRouter</code>, <code>Worker._process_credit</code>, and <code>UserSession.advance_turn</code>. Return through <code>CreditCallbackHandler.on_credit_return</code>, the child/join handlers, <code>ReplayBarrierCoordinator.complete</code>, and <code>SessionTreeRegistry._maybe_release</code>. The source map links every file at the inspected revision. This route exposes the actual state changes behind the word “agent,” rather than assuming that a high-level class diagram explains execution.</p>
+<h2 id="6-what-is-measured-with-exact-arithmetic">6. What is measured, with exact arithmetic</h2>
+<h3 id="61-a-request-has-several-different-timestamps">6.1 A request has several different timestamps</h3>
 <p>Do not equate “HTTP ended,” “last model content arrived,” and “the agent can act.” In the inspected harness, <code>request_latency</code> ends at the <strong>last content response</strong>, excluding usage-only chunks. The timeline's request end can include the remaining HTTP completion. Full-response metrics exist separately. The client also records when a credit was issued, before the worker began the HTTP request. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/metrics/types/request_latency_metric.py">Request latency</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/metrics/types/inter_token_latency_metric.py">ITL calculation</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-request-timeline.ts">Timeline schema</a></p>
 <p>For one request, use this notation:</p>
 <pre><code class="language-text">t_credit   client scheduler issues permission/work
@@ -248,7 +508,7 @@ client queue delay  = t_send − t_credit
 </code></pre>
 <p>The precise first-token classification depends on endpoint parsing, including reasoning/tool content. Record which metric tag you use. One SSE chunk can contain multiple tokens; chunk spacing is not automatically token spacing. In particular, the Qwen recipe sets <code>--stream-interval 50</code>. Its per-request average ITL can still be computed from token counts and elapsed time, but it does not describe every individual token's delivery interval. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/endpoints/openai_chat.py">Endpoint parser</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/single_node/agentic/qwen3.5_fp8_b200_sglang_mtp.sh">Recipe</a></p>
 <p>For a visual agent, add <code>t_action_ready</code>: the first time a complete, valid action or tool invocation can safely be parsed. A fast first token such as <code>{</code> does not mean the action is ready to execute.</p>
-<h3 id="52-interactivity-and-e2e-normalized-interactivity-differ">5.2 Interactivity and E2E normalized interactivity differ</h3>
+<h3 id="62-interactivity-and-e2e-normalized-interactivity-differ">6.2 Interactivity and E2E normalized interactivity differ</h3>
 <p>InferenceX derives the slow-tail interactivity statistic by inverting a latency percentile:</p>
 <pre><code class="language-text">P90 interactivity = 1 / P90(per-request ITL in seconds)
 P90 E2E normalized interactivity = 1 / P90(request_time_seconds / output_tokens)
@@ -256,7 +516,7 @@ P90 E2E normalized interactivity = 1 / P90(request_time_seconds / output_tokens)
 <p>These are not <code>P90(1/ITL)</code> or <code>P90(output_tokens/request_time)</code>. They describe the slow side of the distribution. The E2E normalized metric includes the prefill/first-token wait and therefore penalizes a system that delays first tokens but decodes quickly afterward. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/request_metrics.py">Python reduction</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/queries/derived-agentic-metrics.ts">Application derived metric</a></p>
 <p><strong>Illustrative calculation:</strong> four successful profiling requests each generate 100 tokens. Their content request times are 2, 3, 5, and 10 seconds, and their TTFTs are 1, 1, 2, and 4 seconds. The per-request seconds/output-token ratios are <code>0.02, 0.03, 0.05, 0.10</code>. The Python reducer uses linear interpolation at <code>(n−1) × p</code>, so P90 is <code>0.085 s/token</code>; its inverse is <strong>11.7647 tokens/s</strong>. Taking P90 of the reciprocal rates instead would produce a fast-tail statistic and answer a different question.</p>
 <p>Their ITLs are <code>1/99, 2/99, 3/99, 6/99</code> seconds. Interpolated P90 ITL is <code>5.1/99</code> seconds, yielding <strong>19.4118 tokens/s</strong> interactivity. Both values describe the same requests; the gap is caused by the first-token wait. The included <code>agentx-metric-walkthrough.json</code> was checked by executing the actual InferenceX reducer on this fixture. These are teaching numbers, not GPU results.</p>
-<h3 id="53-throughput-needs-a-population-and-a-time-window">5.3 Throughput needs a population and a time window</h3>
+<h3 id="63-throughput-needs-a-population-and-a-time-window">6.3 Throughput needs a population and a time window</h3>
 <p>The inspected Python reducer first excludes warmup and error-bearing records. It then computes token throughput over:</p>
 <pre><code class="language-text">W = max(successful profiling request_end_ns)
     − min(successful profiling request_start_ns)
@@ -265,24 +525,24 @@ output throughput = sum(output tokens of retained requests) / W_seconds
 <p>If the four illustrative requests all start at second 0 and end at seconds 2, 3, 5, and 10, output throughput is <code>400/10 = 40 tokens/s</code>. Their mean content latency is 5 seconds. Summing their latencies gives 20 seconds because they overlap; 20 is not the wall-clock duration. Dividing 400 by that sum would produce another statistic. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/request_metrics.py">Throughput reducer</a></p>
 <p>The duration computed from surviving requests can differ from the configured measurement duration. Error-only intervals and work that did not produce retained records require separate accounting. AIPerf's own aggregate tables and the InferenceX Python output can also use different populations: some raw harness percentile metric classes admit failed requests, whereas the InferenceX loader drops error rows. Do not silently treat every field named “P90 latency” as interchangeable. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/artifacts.py">Artifact filtering</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/metrics/types/request_latency_metric.py">Harness metric flags</a></p>
 <p>Input-token throughput counts reported prompt tokens, which can include reused tokens. It is not a direct measurement of newly computed prefill tokens. Keep server cache counters and actual uncached work distinct from total logical prompt volume.</p>
-<h3 id="54-queue-aware-effective-and-active-metrics">5.4 Queue-aware, effective, and active metrics</h3>
+<h3 id="64-queue-aware-effective-and-active-metrics">6.4 Queue-aware, effective, and active metrics</h3>
 <p>AIPerf defines an effective-latency family that includes the interval from credit issue to completion, exposing client-side queueing hidden by send-to-response timing. Effective time-series metrics integrate a quantity over the full window; active metrics restrict that integration to intervals where the relevant request phase is active. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/docs/reference/effective-vs-active-metrics.md">Metric methodology</a></p>
 <p>These diagnostics are useful, but a client-side “prefill” interval is not a CUDA kernel profiler measurement: it can contain network transport, admission queues, image decoding, encoder work, and scheduling. Likewise, an interval with at least one request outstanding is not GPU utilization. Use engine/profiler telemetry to establish an internal bottleneck.</p>
 <p>A queue-aware timestamp cannot invent demand absent from a closed-loop experiment. If all agents are blocked waiting for a slow server, they issue fewer future requests. For capacity planning under an independent incoming task arrival rate, also run an open-loop task-arrival experiment with an explicit arrival schedule and deadlines.</p>
-<h3 id="55-missing-data-is-a-state-not-zero">5.5 Missing data is a state, not zero</h3>
+<h3 id="65-missing-data-is-a-state-not-zero">6.5 Missing data is a state, not zero</h3>
 <p>One-token outputs have no ordinary <code>(O−1)</code> ITL. Missing usage counts can invalidate token-rate metrics. Absent image-encoder telemetry does not imply zero encoder latency. Store a sample count and reason for every missing family. The live detail page inspected for result <code>442369</code> showed 5,029 ISL/OSL samples and 5,028 interactivity points, a visible example of different metric populations. This observation alone does not prove why one sample was excluded. <a href="https://inferencex.semianalysis.com/inference/agentic/442369">Observed point</a></p>
-<h2 id="6-speculative-decoding-and-benchmark-validity">6. Speculative decoding and benchmark validity</h2>
-<h3 id="61-some-throughput-runs-deliberately-standardize-acceptance">6.1 Some throughput runs deliberately standardize acceptance</h3>
+<h2 id="7-speculative-decoding-and-benchmark-validity">7. Speculative decoding and benchmark validity</h2>
+<h3 id="71-some-throughput-runs-deliberately-standardize-acceptance">7.1 Some throughput runs deliberately standardize acceptance</h3>
 <p>Speculative decoding proposes several draft tokens and verifies them with the target model. Speed depends partly on how many are accepted. InferenceX maintains golden mean acceptance lengths, measured on the coding category of SPEED-Bench, for particular model/mode/draft-length combinations. Comparable throughput recipes can force a standardized acceptance behavior. Quality evaluation must use real verification. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/golden_al_distribution/README.md">Golden acceptance protocol</a></p>
 <p>For example, the inspected Qwen3.5 FP8 B200 SGLang recipe sets simulated acceptance length to <code>3.39</code> when <code>EVAL_ONLY</code> is false. It requests NEXTN speculation with a specific draft configuration. With <code>EVAL_ONLY=true</code>, the simulation variables are not enabled by that branch, and the script calls <code>run_eval</code> instead of replay. This particular script uses mutually exclusive eval/replay branches; the generic library also supports other combined execution patterns. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/single_node/agentic/qwen3.5_fp8_b200_sglang_mtp.sh">Actual recipe</a></p>
 <p>The interpretation is a normalized system comparison under a declared acceptance assumption. It is not measured VLM draft quality on screenshots. Natural visual prompts can have a different acceptance distribution. For your VLM toolbox, retain both <strong>real acceptance</strong> runs and, only if useful, a separately labeled <strong>controlled acceptance</strong> systems experiment. A forced-acceptance run must never enter a quality leaderboard as evidence of answer correctness.</p>
 <p>The target verification token convention also matters: golden AL includes the guaranteed target token. Engine knobs that count only accepted draft tokens need a conversion. Copy the correct engine adapter, not just the same numeric constant. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/golden_al_distribution/README.md">Engine-specific conventions</a></p>
-<h3 id="62-validity-has-multiple-gates">6.2 Validity has multiple gates</h3>
+<h3 id="72-validity-has-multiple-gates">7.2 Validity has multiple gates</h3>
 <p>The AgentX scenario locks streaming, timing mode, cache-busting policy, <code>ignore_eos=true</code>, loader eligibility, no arbitrary input truncation, and minimum duration. It includes a 95% required latency-signal duration-coverage setting; this is not simply “95% of requests succeeded.” Runtime metadata can further mark cancellation, context overflow, and coverage problems. The default scenario context-overflow threshold is 1%. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/inferencex_agentx_mvp.py">Scenario</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/validator.py">Configuration validator</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/records/records_manager.py">Runtime record validation</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/environment.py">Threshold defaults</a></p>
 <p>InferenceX adds a <strong>separate</strong> generic request-error gate. Its inspected common runtime settings set both live and post-run error thresholds to 10%; a recipe can override them. The post-run validator checks <code>errors/completed</code> against the declared threshold and rejects zero completed requests. Ten percent is an implementation setting, not a suggested production acceptance target. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/runtime_settings.sh">Runtime defaults</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/validate_agentic_result.py">Validator</a></p>
 <p><code>submission_valid=true</code> is therefore not synonymous with “zero errors,” “identical workload,” “good model quality,” or “appropriate VLM benchmark.” Some materially important settings, including t* range and corpus size, are not completely certified by that flag. Publish the resolved manifest and population alongside it.</p>
 <p>The scenario's custom-loader restrictions also mean you cannot replace the coding corpus with arbitrary image traces and continue claiming an official comparable AgentX submission. A generic AIPerf multimodal experiment or a separately named VLM replay scenario is the correct identity. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/validator.py">Loader allowlist validation</a></p>
-<h2 id="7-one-concrete-inferencex-job-from-yaml-to-artifacts">7. One concrete InferenceX job from YAML to artifacts</h2>
+<h2 id="8-one-concrete-inferencex-job-from-yaml-to-artifacts">8. One concrete InferenceX job from YAML to artifacts</h2>
 <p>The inspected key <code>qwen3.5-fp8-b200-sglang-agentic-mtp</code> specifies a dated SGLang container image, <code>Qwen/Qwen3.5-397B-A17B-FP8</code>, runner pool <code>cluster:b200-nscale</code>, and <code>agentic-coding</code> search spaces. It varies TP4/TP8, concurrency, and no-offload versus DRAM HiCache. An explicit concurrency list expands into several comparable deployment points. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/configs/nvidia-master.yaml">Master configuration</a></p>
 <p>Follow one point through the layers:</p>
 <ol>
@@ -299,20 +559,20 @@ output throughput = sum(output tokens of retained requests) / W_seconds
 <h3 id="accuracy-evaluation-is-an-additional-lane">Accuracy evaluation is an additional lane</h3>
 <p>The evaluation path can use lm-evaluation-harness tasks, SWE-bench machinery, and model-specific vendor suites. Task selection, context length, concurrency, scoring, and score thresholds are independently configured. <code>EVAL_ONLY</code> must be set before server startup when it affects context and simulation settings. The concrete Qwen recipe selects lm-eval; other agentic recipes can use another framework. A GSM8K score or a vendor tool-schema smoke check does not certify visual perception or a GUI task. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/docs/eval-agentx-procedures.md">Eval dispatch and artifact procedure</a></p>
 <p>For VLM integration, add a vision-aware evaluator with its own dataset and score contract. Merely putting images into a throughput input file will not make <code>run_eval</code> compute document or computer-use correctness.</p>
-<h2 id="8-from-a-raw-request-to-a-dashboard-point">8. From a raw request to a dashboard point</h2>
-<h3 id="81-the-artifact-to-chart-data-lineage">8.1 The artifact-to-chart data lineage</h3>
+<h2 id="9-from-a-raw-request-to-a-dashboard-point">9. From a raw request to a dashboard point</h2>
+<h3 id="91-the-artifact-to-chart-data-lineage">9.1 The artifact-to-chart data lineage</h3>
 <p><code>profile_export.jsonl</code> is the request-level evidence. <code>profile_export_aiperf.json</code> contains harness aggregates and metadata. Server metrics exports carry engine observations and time slices. The Python AgentX reducer combines these with deployment metadata into <code>request_metrics</code> and <code>server_metrics</code> containers. Keep raw evidence because later reducers may change or need additional fields. <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/artifacts.py">Artifact reader</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/__init__.py">Aggregate builder</a></p>
 <p>In the app, <code>flattenAgenticAggRow()</code> maps nested v3 containers to the established flat metric keys. It renames <code>p50</code> to <code>median_*</code>. It does <strong>not</strong> map every nested field: source comments explicitly identify unconsumed server details. A field existing in a raw artifact is therefore not a guarantee that a generic chart can display it. <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/agentic-v3-flatten.ts">v3 compatibility mapping</a></p>
 <p>The trace ingestion coordinator computes aggregate distributions, server chart series, and a compact request timeline. Timeline records preserve conversation IDs, replay-lane identity, source trace/turn references, depth, phase, dispatch/start/ack/end times, token counts, and cancellation. Replaying one source trace multiple times requires distinct replay IDs; grouping only by source conversation ID would merge separate live sessions. <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-trace-derived.ts">Derived ETL</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-request-timeline.ts">Timeline extraction</a></p>
 <p>E2E normalized interactivity follows a particularly instructive path: raw request latencies and output lengths → per-request ratios → stored ratio percentile bundle → reciprocal at read time → typed React query → chart. The API's preferred path reads precomputed statistics; old or missing bundles can fall back to parsing saved profile blobs and write back upgraded projections. That is reprocessing existing evidence, not a new inference run. <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/queries/derived-agentic-metrics.ts">Database read path</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/hooks/api/use-derived-agentic-metrics.ts">React hook</a></p>
-<h3 id="82-what-a-ui-click-does-today">8.2 What a UI click does today</h3>
+<h3 id="92-what-a-ui-click-does-today">9.2 What a UI click does today</h3>
 <p>On the public dashboard, a model/scenario selection changes browser state and read queries over existing benchmark rows. A point selection opens a result-ID page. A concurrency navigator chooses another saved point. Phase tabs and metric controls select projections, populations, or visualizations. They do not queue a new GPU experiment. <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/hooks/useChartData.ts">Main chart data hook</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/use-detail-view.ts">Detail view URL state</a></p>
 <p>The live point page inspected for <code>442369</code> was a Qwen3.5 / B200 / FP8 / SGLang result. It exposed <strong>Per-point</strong>, <strong>Request timeline</strong>, <strong>Aggregates across configs</strong>, and <strong>Logs</strong> views, a warmup/profiling selector, sibling concurrency points, and an Actions run link. Per-point panels included ISL/OSL distributions, interactivity, TTFT/E2E, KV utilization, queue depth, cache hit rate, input/decode throughput, prompt-token source breakdown, and unique input tokens in flight. These are the strongest representation features to adapt. <a href="https://inferencex.semianalysis.com/inference/agentic/442369">Live point</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/agentic-point-detail.tsx">Detail components</a></p>
 <p>The cache percentages on that page are engine-defined metrics. Some backends expose combined versus separate tiers, and the UI accounts for this. Do not blindly add two percentages unless they share a denominator and describe disjoint hits. <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/point-summary.tsx">Point metadata display</a></p>
-<h3 id="83-what-is-worth-extracting">8.3 What is worth extracting</h3>
+<h3 id="93-what-is-worth-extracting">9.3 What is worth extracting</h3>
 <p>The reusable product idea is <strong>a navigable evidence chain</strong>: a comparison point opens the exact run; the run opens its distributions and timeline; a request opens its inputs, outputs, context, and resource state. Keep that chain while changing the measurement contract for visual tasks. Copying only a scatterplot would reproduce the look without the explanatory power.</p>
-<h2 id="9-vlm-support-what-exists-and-what-you-must-add">9. VLM support: what exists and what you must add</h2>
-<h3 id="91-existing-support-is-in-the-general-harness">9.1 Existing support is in the general harness</h3>
+<h2 id="10-vlm-support-what-exists-and-what-you-must-add">10. VLM support: what exists and what you must add</h2>
+<h3 id="101-existing-support-is-in-the-general-harness">10.1 Existing support is in the general harness</h3>
 <p>The pinned harness includes <code>single_turn</code> and <code>multi_turn</code> loaders with image fields. The general chat endpoint serializes images into OpenAI-style <code>image_url</code> content parts and supports authored image UUIDs. A vision tutorial demonstrates actual image inputs and generated images. These are real building blocks you can use immediately with an appropriate VLM server. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/multi_turn.py">Multi-turn loader</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/endpoints/openai_chat.py">Chat endpoint</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/docs/tutorials/vision.md">Vision tutorial</a></p>
 <p>By contrast, the Weka schema used by canonical AgentX has integer cache block identities, token counts, and content-type annotations. It has no image-byte, image-URI, pixel geometry, page-number, or vision-processor fields. Writing <code>input_types: ["image"]</code> would be an annotation, not a mechanism that sends a picture. Its loader reconstructs text/token structure. This is a concrete schema and implementation limitation, not a claim that the entire AIPerf project lacks multimodal support. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace_models.py">Weka models</a> · <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace.py">Weka loader</a></p>
 <div class="table-scroll"><table>
@@ -372,10 +632,10 @@ output throughput = sum(output tokens of retained requests) / W_seconds
 </tbody>
 </table></div>
 <p>One specific compatibility limit matters: the pinned <code>multi_turn</code> loader rejects <code>--uuid-and-strip</code>. Its error directs that specialized image reuse mode to <code>single_turn</code> with session-grouped rows. Do not combine every multimodal feature flag just because each is supported somewhere. Verify the loader/endpoint combination you actually select. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/multi_turn.py">Loader check</a></p>
-<h3 id="92-a-vision-capable-model-label-does-not-certify-a-vision-workload">9.2 A vision-capable model label does not certify a vision workload</h3>
+<h3 id="102-a-vision-capable-model-label-does-not-certify-a-vision-workload">10.2 A vision-capable model label does not certify a vision workload</h3>
 <p>A model may support images while a benchmark run sends only reconstructed text. A model may also be served with particular modality restrictions or processor options. The evidence for a VLM run is the actual request payload, model/processor configuration, and image-aware telemetry, not the model family name displayed on the chart.</p>
 <p>For every experiment, make the first audit simple: save a redacted wire request and verify that its content contains a real image reference or data URL, the server accepted it, and changing the image can change a relevant answer. The latter is a semantic smoke test, not a full quality benchmark.</p>
-<h2 id="10-the-vlm-serving-path-you-need-to-measure">10. The VLM serving path you need to measure</h2>
+<h2 id="11-the-vlm-serving-path-you-need-to-measure">11. The VLM serving path you need to measure</h2>
 <p><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1160" height="835" viewBox="0 0 1160 835" role="img" aria-labelledby="title desc"><title id="title">Live visual-agent serving and action flow</title><desc id="desc">An image observation goes through transport, preprocessing, vision encoding and language-model inference. The generated action runs in a real environment and changes the next observation. Different caches and timing boundaries must be recorded.</desc><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#55707a"/></marker></defs><rect width="1160" height="835" fill="#f5f8f5"/><text x="28" y="35" font-family="Arial,sans-serif" font-size="14" fill="#956119" font-weight="700" text-anchor="start">PROPOSED LIVE IMAGE-AGENT FLOW / conceptual stages; engines may overlap or fuse them</text><rect x="28" y="70" width="255" height="114" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="97" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Observe</text><text x="42" y="121" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Capture screenshot / rasterize page</text><text x="42" y="142" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Record bytes, geometry, transform</text><text x="42" y="163" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Hash immutable asset</text><rect x="329" y="70" width="255" height="114" rx="5" fill="white" stroke="#c5d5d5"/><text x="343" y="97" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Construct + transport</text><text x="343" y="121" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">History + image + tool definitions</text><text x="343" y="142" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Payload serialization / upload</text><text x="343" y="163" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Scheduler credit → HTTP start</text><rect x="630" y="70" width="255" height="114" rx="5" fill="white" stroke="#c5d5d5"/><text x="644" y="97" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Preprocess</text><text x="644" y="121" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Fetch, decode, resize, crop/patch</text><text x="644" y="142" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Model-specific processor settings</text><text x="644" y="163" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Track processor-cache policy</text><path d="M288 124L323 124" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M589 124L624 124" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><rect x="630" y="250" width="255" height="119" rx="5" fill="white" stroke="#c5d5d5"/><text x="644" y="277" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Vision encoder</text><text x="644" y="301" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Image features / projection</text><text x="644" y="322" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Measure actual encoder work</text><text x="644" y="343" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Reuse only with valid identity</text><rect x="329" y="250" width="255" height="119" rx="5" fill="white" stroke="#c5d5d5"/><text x="343" y="277" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Language-model prefill</text><text x="343" y="301" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Visual + text context</text><text x="343" y="322" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Valid prefix/KV cache lookup</text><text x="343" y="343" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Scheduling and new context work</text><rect x="28" y="250" width="255" height="119" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="277" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Decode + response</text><text x="42" y="301" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">First content → final content</text><text x="42" y="322" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Actual output length + usage</text><text x="42" y="343" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">HTTP completion separately</text><path d="M757 188L757 244" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M625 307L590 307" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M324 307L289 307" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><rect x="28" y="435" width="255" height="123" rx="5" fill="white" stroke="#c5d5d5"/><text x="42" y="462" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Parse action</text><text x="42" y="486" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Wait for complete valid arguments</text><text x="42" y="507" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Record action-ready timestamp</text><text x="42" y="528" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Map image/viewport coordinates</text><text x="42" y="549" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Reject malformed actions</text><rect x="329" y="435" width="255" height="123" rx="5" fill="white" stroke="#c5d5d5"/><text x="343" y="462" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Execute + settle</text><text x="343" y="486" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Run tool in task environment</text><text x="343" y="507" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Record retries, errors, duration</text><text x="343" y="528" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Observe actual resulting state</text><text x="343" y="549" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Preserve causal dependencies</text><rect x="630" y="435" width="255" height="123" rx="5" fill="white" stroke="#c5d5d5"/><text x="644" y="462" font-family="Arial,sans-serif" font-size="16" fill="#956119" font-weight="700" text-anchor="start">Score task</text><text x="644" y="486" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Final-state evaluator</text><text x="644" y="507" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Success / deadline / partial score</text><text x="644" y="528" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Steps + total resource cost</text><text x="644" y="549" font-family="Arial,sans-serif" font-size="13" fill="#55707a" font-weight="400" text-anchor="start">Evidence and evaluator revision</text><path d="M155 373L155 429" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M288 494L323 494" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M589 494L624 494" stroke="#55707a" fill="none" stroke-width="1.6" marker-end="url(#arr)"/><path d="M456 563V606H15V126H26" fill="none" stroke="#55707a" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr)"/><text x="938" y="647" font-family="Arial,sans-serif" font-size="15" fill="#17303b" font-weight="700" text-anchor="end">Next observation comes from the changed environment.</text><text x="28" y="702" font-family="Arial,sans-serif" font-size="13" fill="#086d69" font-weight="700" text-anchor="start">MEASUREMENT BOUNDARIES</text><text x="28" y="730" font-family="Arial,sans-serif" font-size="16" fill="#17303b" font-weight="400" text-anchor="start">Serving: HTTP start → first content / final content / HTTP end</text><text x="28" y="757" font-family="Arial,sans-serif" font-size="16" fill="#17303b" font-weight="400" text-anchor="start">Agent action: observation ready → complete valid action → tool completion</text><text x="28" y="784" font-family="Arial,sans-serif" font-size="16" fill="#17303b" font-weight="400" text-anchor="start">Task: admission → terminal outcome; include all retries and failures</text><text x="28" y="812" font-family="Arial,sans-serif" font-size="14" fill="#086d69" font-weight="700" text-anchor="start">Do not label TTFT as pure encoder or prefill time without internal instrumentation.</text></svg></div></p>
 <p>A common image-input VLM path is:</p>
 <pre><code class="language-text">screenshot / page rasterization
@@ -390,11 +650,11 @@ output throughput = sum(output tokens of retained requests) / W_seconds
   → new screenshot or document state
 </code></pre>
 <p>This is a conceptual decomposition. Actual VLM architectures and serving engines can fuse, overlap, relocate, or cache stages. Some use cross-attention rather than treating every visual feature as an ordinary decoder token. Discover the selected model's path before assigning token counts or memory formulas.</p>
-<h3 id="101-image-resolution-is-workload-not-decoration">10.1 Image resolution is workload, not decoration</h3>
+<h3 id="111-image-resolution-is-workload-not-decoration">11.1 Image resolution is workload, not decoration</h3>
 <p>Two requests with “one image” can have very different cost: a compressed 800×600 screenshot, a high-DPI document page, and several dynamically tiled crops do not present the same encoder workload. Record original dimensions, effective dimensions after processing, encoded byte size, media format, number of pages/images, crop policy, and processor configuration. For document agents, also record rasterization DPI and whether preprocessing selected or cropped pages.</p>
 <p>For a simple patching scheme, a rough patch count is <code>ceil(H/p) × ceil(W/p)</code>, with patch size p. Real models can add resizing, merging, global crops, dynamic tiling, separators, and architecture-specific tokenization. Therefore this formula is an intuition aid, not the measured visual-token count. Obtain actual processor/engine accounting if available and state its definition.</p>
 <p>Base64 also changes transport cost: the encoded payload is approximately <code>4 × ceil(bytes/3)</code> bytes before JSON overhead. URL inputs shift image fetch work to another part of the path; an already cached URL is not equivalent to a cold remote fetch. In a controlled serving test, freeze asset bytes and retrieval policy. In an end-to-end agent test, include capture, encoding, and retrieval when users pay that latency.</p>
-<h3 id="102-there-are-several-caches-to-distinguish">10.2 There are several caches to distinguish</h3>
+<h3 id="112-there-are-several-caches-to-distinguish">11.2 There are several caches to distinguish</h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -434,24 +694,24 @@ output throughput = sum(output tokens of retained requests) / W_seconds
 <p>These are logical categories, not a promise that one engine exposes five independent caches. In vLLM, the documented multimodal processor cache and prefix cache have different purposes; image hashes participate in prefix identity. Engine/version-specific details determine whether encoder reuse is integrated with another cache. <a href="https://docs.vllm.ai/en/stable/features/multimodal_inputs/">vLLM multimodal inputs</a> · <a href="https://docs.vllm.ai/en/stable/design/prefix_caching/">vLLM prefix caching</a></p>
 <p>For image identity, retain a content checksum and the processing fingerprint. A stable URI is not enough if its bytes can change. Reusing a UUID for different image content invalidates the experiment and can cause stale reuse; use explicit content identity and the exact engine contract.</p>
 <p>Test at least four relevant conditions: unique images, repeated same image with changed text, slightly changed screenshots, and repeated conversation history. Label cold starts separately from steady-state warmed workloads. Do not flush every cache if the application actually benefits from reuse, and do not prewarm every asset if production is mostly unique screenshots.</p>
-<h3 id="103-memory-and-serving-topology">10.3 Memory and serving topology</h3>
+<h3 id="113-memory-and-serving-topology">11.3 Memory and serving topology</h3>
 <p>Memory pressure comes from weights, decoder KV or other recurrent state, vision tensors/activations, processor caches, workspaces, and batching. For a conventional decoder attention stack, KV bytes per token are approximately <code>2 × layers × KV_heads × head_dim × bytes_per_element</code>, before partitioning and implementation overhead. Hybrid, recurrent, compressed, or cross-attention architectures change this model. Reused prefixes also mean summing all active logical context lengths overcounts unique resident KV.</p>
 <p>An image-heavy workload can bottleneck the CPU decoder, vision encoder, or preprocessing stage before the decoder is saturated. A long-document conversation can instead become dominated by growing language-model context and KV capacity. This is why queue depth, encoder timing, image geometry, and context length should be visible together.</p>
 <p>Start with an aggregated VLM deployment. Separate prefill/decode pools require correct KV transfer and model support. Separating image encoding additionally requires a supported feature-transfer contract, processor consistency, routing, and accounting for transfer latency and memory. A text-only prefill/decode recipe does not establish that this multimodal split works. Treat encoder disaggregation as a later experiment rather than an assumption in the initial architecture.</p>
-<h3 id="104-why-short-visual-actions-expose-ttft">10.4 Why short visual actions expose TTFT</h3>
+<h3 id="114-why-short-visual-actions-expose-ttft">11.4 Why short visual actions expose TTFT</h3>
 <p>Take two <strong>hypothetical</strong> configurations for a 20-token action. A has TTFT 0.8 seconds and decode rate 100 tokens/s; B has TTFT 0.2 seconds and decode rate 50 tokens/s. Using 19 post-first-token intervals, A needs about <code>0.8 + 19/100 = 0.99 s</code>; B needs about <code>0.2 + 19/50 = 0.58 s</code>. The slower decoder produces an actionable result sooner. Schema validation or buffered tool-call arguments can add further delay.</p>
 <p>A task with ten such decisions and several tools amplifies that difference. Measure action-ready and task-completion latency directly; do not predict task time by multiplying an average TTFT by an average turn count when branches, retries, and parallel tools vary.</p>
-<h2 id="11-design-the-three-experiments-separately">11. Design the three experiments separately</h2>
-<h3 id="111-experiment-a-image-serving-characterization">11.1 Experiment A: image-serving characterization</h3>
+<h2 id="12-design-the-three-experiments-separately">12. Design the three experiments separately</h2>
+<h3 id="121-experiment-a-image-serving-characterization">12.1 Experiment A: image-serving characterization</h3>
 <p>Use a fixed corpus of real screenshots and rendered document pages. Test one image, multiple images, and long histories as separate strata. Keep image processing fixed within a comparison. Use the general AIPerf image path and an already validated VLM endpoint. Begin at concurrency 1; increase load until you see latency, errors, or queue growth violate your chosen service target.</p>
 <p>Two submodes are useful. <strong>Controlled output length</strong> isolates serving behavior under a declared decode budget; only enable forced length when the engine supports it, and label it as such. <strong>Natural output</strong> lets the model terminate normally and retains answer quality plus actual length. Neither mode alone is a fair universal model ranking: forced length changes behavior, while natural length changes the amount of work performed.</p>
 <p>Collect client send/first-content/final-content/HTTP-end timestamps, server usage, image geometry, failures, queue metrics, CPU load, GPU memory, and available encoder/prefill/decode spans. Keep model loading and graph compilation outside steady-state metrics, but report a separate cold-start experiment if startup matters to the service.</p>
-<h3 id="112-experiment-b-recorded-visual-agent-replay">11.2 Experiment B: recorded visual-agent replay</h3>
+<h3 id="122-experiment-b-recorded-visual-agent-replay">12.2 Experiment B: recorded visual-agent replay</h3>
 <p>Record genuine application sessions with real image observations and full message/tool structure. Convert them to a dependency graph with turn IDs and explicit timing. Replay the same requests against alternate serving configurations. When the next request must remain fixed, supply the recorded assistant/tool observations instead of letting generated responses rewrite the experiment.</p>
 <p>This lets you answer: “Given this exact visual-agent workload, what are the latency distribution, queue behavior, encoder load, and cache reuse?” It does not answer whether the model would have selected the recorded action. Store generated responses for optional <strong>offline turn scoring</strong>, but label that score carefully: following recorded correct history can rescue a model that would already have gone off-track in a live run.</p>
 <p>Replay must also choose a scheduling contract. A closed-loop dependency replay preserves causal waits and changes achieved request rate with server speed. An open-loop request replay preserves an arrival schedule and reveals backlog under overload, but can violate agent causality if a successor is sent before its prerequisite completes. For user-facing capacity studies, open-loop <strong>task arrival</strong> with closed-loop execution inside each task is often the useful combination.</p>
 <p>A generic <code>multi_turn</code> input file is sufficient for a simple linear image conversation. It is not proof that you have preserved AgentX's full branch/join/warmup semantics. For tree replay, build an adapter to the harness's Conversation/Turn/dependency structures, validate it with small deterministic graphs, and give it an explicit scenario identity.</p>
-<h3 id="113-experiment-c-a-live-image-agent-loop">11.3 Experiment C: a live image-agent loop</h3>
+<h3 id="123-experiment-c-a-live-image-agent-loop">12.3 Experiment C: a live image-agent loop</h3>
 <p>Here the actual answer decides the next action and observation. The controller must implement:</p>
 <pre><code class="language-text">restore task environment and initialize history
 while task has not terminated and limits are not exceeded:
@@ -467,7 +727,7 @@ record outcome, costs, failures, and full causal trace
 <p>The scheduler can run several independent tasks concurrently. Tool actions and screenshot capture consume resources too; isolation and deterministic environment resets keep one task from affecting another. A slow sandbox should appear as tool/environment time instead of being misattributed to the model server.</p>
 <p>Live evaluation requires real decoding and ordinary termination. Do not force AgentX's recorded output lengths, synthetic acceptance, or invented tool responses into this path. A model's malformed action, retry, premature stop, and timeout are part of the result.</p>
 <p>For desktop/screenshot tasks, <a href="https://github.com/xlang-ai/OSWorld">OSWorld</a> supplies a concrete environment-and-task evaluation reference. For visual web tasks, <a href="https://github.com/web-arena-x/visualwebarena">VisualWebArena</a> is a relevant reference. Their environment versions and evaluator definitions must be pinned; neither becomes equivalent to your production application merely by using screenshots. For document parsing, <a href="https://github.com/opendatalab/OmniDocBench">OmniDocBench</a> provides document-oriented evaluation, but parser quality alone is not an agent workflow score. Use these as task/evaluator adapters where they match your use case.</p>
-<h2 id="12-a-worked-visual-agent-task-and-its-trace">12. A worked visual-agent task and its trace</h2>
+<h2 id="13-a-worked-visual-agent-task-and-its-trace">13. A worked visual-agent task and its trace</h2>
 <p><strong>Proposed teaching task:</strong> read an invoice image, extract the invoice number and total, compare them with a seeded order record, then populate a sandbox form. Success requires the final saved fields to match ground truth, the intended order to be selected, and no duplicate submission. This combines perception, document reasoning, tool use, and environment state verification.</p>
 <p>Keep two datasets: an immutable input/evaluator specification and observed run events. Ground truth belongs to the evaluator and must not be exposed in the model prompt.</p>
 <h3 id="capture-contract">Capture contract</h3>
@@ -561,14 +821,14 @@ record outcome, costs, failures, and full causal trace
 </code></pre>
 <p><code>prompt_total</code> is deliberately not copied into <code>text_tokens</code> or <code>visual_tokens</code>. Engines do not necessarily expose a comparable decomposition. Missing values remain null with a documented accounting source. Stable run/task/attempt/request identifiers also prevent retries from silently increasing the apparent task sample size.</p>
 <p>A full action follows in a separate tool event; it should not be folded into HTTP request latency. If document extraction and order lookup run in parallel, represent their dependencies and compute the task's actual elapsed time or critical path. Summing all overlapping spans would overstate wall time.</p>
-<h2 id="13-result-metrics-designed-for-real-image-agents">13. Result metrics designed for real image agents</h2>
-<h3 id="131-primary-outcomes-and-denominators">13.1 Primary outcomes and denominators</h3>
+<h2 id="14-result-metrics-designed-for-real-image-agents">14. Result metrics designed for real image agents</h2>
+<h3 id="141-primary-outcomes-and-denominators">14.1 Primary outcomes and denominators</h3>
 <p><strong>Task success rate</strong> is <code>successful eligible task attempts / all eligible started task attempts</code>, under a frozen retry/attempt policy. Timeouts and model-caused failures remain in the denominator. Independently documented infrastructure-invalid runs can be separated, with their counts visible. Repeated attempts need a declared pass@k or first-attempt policy; do not select the best outcome afterward.</p>
 <p><strong>Task latency</strong> runs from admitted task start to terminal outcome. Show successful-task latency separately from all-task outcomes and timeout mass. A system should not appear fast because hard tasks timed out and disappeared from the latency distribution. Deadline success can be more actionable than a single average.</p>
 <p><strong>SLO goodput</strong> is the number of successful tasks that meet a declared deadline divided by the declared observation window. Use an arrival/admission cutoff and drain rule so completed and unfinished tasks are accounted for consistently. For comparison, also report admitted tasks, completed tasks, still-running tasks, and task mix.</p>
 <p><strong>Cost per successful task</strong> divides the cost of the entire comparable run, including unsuccessful attempts and retries, by successful tasks. Specify whether cost includes allocated GPU time, API charges, CPU/sandbox resources, and storage. If a replica remains allocated during tool waits, its allocation cost does not disappear simply because no decoder request is in flight.</p>
 <p>For example, in an <strong>illustrative</strong> 10-minute observation with 100 admitted tasks, 90 completed, 80 successful, and 70 successful within a 30-second deadline, deadline goodput is <code>70/600 = 0.1167 tasks/s</code>. If the run cost is $12, cost per success is <code>$12/80 = $0.15</code>, not <code>$12/90</code>. Pending tasks need a declared drain or censored-outcome treatment before this becomes a final scored batch. These quantities answer a different question from output tokens/s.</p>
-<h3 id="132-secondary-diagnostics">13.2 Secondary diagnostics</h3>
+<h3 id="142-secondary-diagnostics">14.2 Secondary diagnostics</h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -611,12 +871,12 @@ record outcome, costs, failures, and full causal trace
 </tbody>
 </table></div>
 <p>For screenshot grounding, retain the coordinate convention: original versus resized image, crop offset, pixel versus normalized coordinates, display scale, and target bounds. A valid JSON <code>click(x,y)</code> can still fail because coordinates were interpreted in the wrong space. For document extraction, retain field normalization rules and partial-credit policy; a substring match can reward a wrong entity or amount.</p>
-<h3 id="133-compare-within-comparable-cohorts">13.3 Compare within comparable cohorts</h3>
+<h3 id="143-compare-within-comparable-cohorts">14.3 Compare within comparable cohorts</h3>
 <p>Never put all “VLM” runs on one undifferentiated frontier. Partition by task/dataset version, image preprocessing, task mode, quality threshold, precision, cache condition, and resource-accounting scope. For cross-model comparisons, native tokenizer output tokens are not a universal unit of useful work; task success/time or fixed semantic output requirements are more defensible primary measures.</p>
 <p>A systems comparison can hold one model and image corpus fixed while changing an engine flag. A product comparison can hold tasks fixed and allow each model's valid trajectory to differ. These are both useful but have different causal interpretations.</p>
 <p>Use repeated runs and per-task paired comparisons where possible. Bootstrap at task/session level rather than treating many correlated turns from one task as independent samples. Report uncertainty, sample sizes, and retained populations. A confidence interval over requests does not automatically quantify uncertainty over tasks or environments.</p>
-<h2 id="14-extract-the-representation-layer-at-explicit-seams">14. Extract the representation layer at explicit seams</h2>
-<h3 id="141-what-to-reuse-wrap-or-replace">14.1 What to reuse, wrap, or replace</h3>
+<h2 id="15-extract-the-representation-layer-at-explicit-seams">15. Extract the representation layer at explicit seams</h2>
+<h3 id="151-what-to-reuse-wrap-or-replace">15.1 What to reuse, wrap, or replace</h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -680,7 +940,7 @@ record outcome, costs, failures, and full causal trace
 </table></div>
 <p><a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/request_metrics.py">Request reducers</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/server_metrics.py">Backend adapters</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/agentic-v3-flatten.ts">Flattening</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-request-timeline.ts">Timeline ETL</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/agentic-point-detail.tsx">Point components</a> · <a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/utils/global-pareto.ts">Pareto series code</a></p>
 <p>The app is not a drop-in chart library. Components depend on typed hooks, metric registries, framework/hardware constants, URL state, and shared styles. Extract data contracts and pure transformations first, then make the chart components accept those contracts as props. Preserve upstream licenses/notices when reusing code; naming the repository under your account does not remove third-party code ownership.</p>
-<h3 id="142-suggested-package-boundaries">14.2 Suggested package boundaries</h3>
+<h3 id="152-suggested-package-boundaries">15.2 Suggested package boundaries</h3>
 <pre><code class="language-text">vlm-workloads/       immutable assets, task specs, capture and replay adapters
 vlm-runner/          run manifests, local execution, server readiness, lifecycle
 vlm-agent/           live policy loop, tool/environment adapters, termination
@@ -691,15 +951,15 @@ vlm-results-api/     run catalog, cohort selection, projections, artifact access
 vlm-results-ui/      comparisons, point details, task timeline, image/action views
 </code></pre>
 <p>Keep the metric package independent of React, the database, and GPU libraries. Its input should be saved normalized records and a resolved manifest; its output should be deterministic summaries with definitions, units, sample counts, and exclusions. This gives you an offline correctness check and lets you recompute historical results when a metric definition changes.</p>
-<h3 id="143-store-evidence-once-derive-views-reproducibly">14.3 Store evidence once; derive views reproducibly</h3>
+<h3 id="153-store-evidence-once-derive-views-reproducibly">15.3 Store evidence once; derive views reproducibly</h3>
 <p>Use a run manifest and content-addressed artifact store for raw messages, image references, outputs, traces, telemetry, and evaluator evidence. A relational catalog can index <code>runs</code>, <code>deployment_configs</code>, <code>tasks</code>, <code>task_attempts</code>, <code>requests</code>, <code>tool_events</code>, <code>assets</code>, <code>evaluations</code>, and <code>metric_projections</code>. Large raw payloads need not be duplicated into every catalog row.</p>
 <p>Make <code>(run_id, task_attempt_id, request_id)</code> or a stable globally unique request ID the deduplication key. Store <code>artifact_sha256</code>, <code>schema_version</code>, and <code>aggregation_version</code> in projection provenance. Re-ingesting the same artifact must be idempotent. A corrected reducer should create or identify a new projection version without pretending that a fresh GPU run occurred.</p>
 <p>Keep images private or sanitized as the real task requires; screenshots can carry application data. This is an architectural artifact-access requirement for your toolbox, not a requirement to publish production traces to the public InferenceX site.</p>
-<h2 id="15-the-ui-to-build-for-your-purpose">15. The UI to build for your purpose</h2>
-<h3 id="151-comparison-view">15.1 Comparison view</h3>
+<h2 id="16-the-ui-to-build-for-your-purpose">16. The UI to build for your purpose</h2>
+<h3 id="161-comparison-view">16.1 Comparison view</h3>
 <p>Use the main plot to compare <strong>successful tasks/s versus P90 task latency</strong>, with filters for task family, image workload, quality floor, serving configuration, and cache condition. Provide secondary axes/views for cost per success and serving-only tokens/s. Each point is one resolved experiment, with a visible validity state and denominator.</p>
 <p>A frontier should include only eligible runs in the selected cohort. Point A dominates B when it is no worse on the selected objectives and strictly better on at least one; the direction changes for latency/cost versus throughput/quality. A lower-resolution run with lower quality must not silently dominate a more accurate run because it is faster.</p>
-<h3 id="152-point-detail-view">15.2 Point-detail view</h3>
+<h3 id="162-point-detail-view">16.2 Point-detail view</h3>
 <p>Adapt the existing AgentX layout: run/config summary at top, distributions and telemetry beneath, sibling configuration navigation, and a deep link to artifacts. Add these VLM-specific panels:</p>
 <ul>
 <li>Task success and deadline success, with attempted/completed/failed/timed-out counts.</li>
@@ -710,12 +970,12 @@ vlm-results-ui/      comparisons, point details, task timeline, image/action vie
 <li>Steps, tool time, retries, and repeated observations per task.</li>
 <li>Cost and resource accounting with the exact scope shown.</li>
 </ul>
-<h3 id="153-causal-task-timeline">15.3 Causal task timeline</h3>
+<h3 id="163-causal-task-timeline">16.3 Causal task timeline</h3>
 <p>Show a row per task and nested agent/tool branch. Use request bars for client wait, time to first content, and remaining response; use separate tool/environment bars. Clicking a request should open the exact image/page, prompt/context reference, generated response, parsed action, coordinate overlay, before/after state, and evaluator evidence. Never infer an internal GPU phase from client timestamps without telemetry.</p>
 <p>Use shared time cursors so an action stall can be correlated with queue depth, image processing, GPU memory, and cache behavior. Preserve warmup/profiling boundaries and cancelled requests. Separate source trace identity from replay instance and task attempt identity.</p>
-<h3 id="154-export-contract">15.4 Export contract</h3>
+<h3 id="164-export-contract">16.4 Export contract</h3>
 <p>Export the resolved manifest, selected cohort, exclusions, metric definitions, sample counts, and raw artifact references with every comparison. A screenshot of a Pareto curve cannot establish reproducibility by itself. Users should be able to trace a metric back to a request population and recompute it offline.</p>
-<h2 id="16-ui-to-run-flow-for-your-toolbox">16. UI-to-run flow for your toolbox</h2>
+<h2 id="17-ui-to-run-flow-for-your-toolbox">17. UI-to-run flow for your toolbox</h2>
 <p>This is a <strong>proposed extension</strong>, not a description of the current public InferenceX UI.</p>
 <pre><code class="language-text">User selects workload + mode + deployment + load + cache policy
   → UI displays the resolved experiment manifest
@@ -733,9 +993,9 @@ vlm-results-ui/      comparisons, point details, task timeline, image/action vie
 <p>Use durable states such as <code>queued</code>, <code>preparing</code>, <code>warming</code>, <code>running</code>, <code>draining</code>, <code>evaluating</code>, <code>publishing</code>, and terminal outcomes. Execution failure and invalid measurement are distinct: a process can exit successfully but omit required samples; a failed process can still yield useful diagnostic artifacts.</p>
 <p>Browsing existing results should use GET queries and local chart transformations. A clearly named <strong>Run experiment</strong> action creates work and consumes resources. Changing a chart filter should not implicitly rerun a model. Cancellation should stop admission, apply the declared in-flight policy, and preserve partial evidence with a cancelled status.</p>
 <p>GitHub Actions can be one backend: the API dispatches a workflow with a manifest hash/run ID, the runner reads that immutable manifest, and completion triggers artifact ingestion. You still need run identity, idempotency, status reconciliation, retry ownership, and resource limits. The GitHub dispatch itself is not the benchmark methodology.</p>
-<h2 id="17-practical-starting-point-a-vlm-endpoint-and-aiperf">17. Practical starting point: a VLM endpoint and AIPerf</h2>
+<h2 id="18-practical-starting-point-a-vlm-endpoint-and-aiperf">18. Practical starting point: a VLM endpoint and AIPerf</h2>
 <p>The following are <strong>command templates for your Linux GPU environment</strong>, not commands run or performance-validated in this study. They exercise Experiment A. Hardware availability, the final VLM choice, its engine compatibility, and the application dataset remain your project decisions.</p>
-<h3 id="171-pin-the-harness-you-are-studying">17.1 Pin the harness you are studying</h3>
+<h3 id="181-pin-the-harness-you-are-studying">18.1 Pin the harness you are studying</h3>
 <pre><code class="language-bash">git clone https://github.com/SemiAnalysisAI/agentx-harness.git
 cd agentx-harness
 git checkout 754356e9a39acc6cc6afb242d123bb57c3fb6f75
@@ -745,7 +1005,7 @@ python -m pip install -e .
 python -m pip freeze &gt; resolved-python-dependencies.txt
 </code></pre>
 <p>This matches the source revision inspected under InferenceX's gitlink. A resolved dependency lock or container digest is still needed for reproducibility because source pinning alone does not pin every transitive package. The source advertises Python <code>&gt;=3.11,&lt;3.14</code>. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/pyproject.toml">Package contract</a></p>
-<h3 id="172-start-the-chosen-server-separately">17.2 Start the chosen server separately</h3>
+<h3 id="182-start-the-chosen-server-separately">18.2 Start the chosen server separately</h3>
 <p>Choose a model/engine pair with verified image support. The harness tutorial uses <code>Qwen/Qwen2-VL-2B-Instruct</code> as a small integration example; that is a starting smoke-test model, not a recommendation for your final task. Pin the serving image by digest and model revision before performance comparisons. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/docs/tutorials/vision.md">Vision tutorial</a></p>
 <pre><code class="language-bash"># Define these in the experiment environment first:
 # VLM_SERVER_IMAGE = validated vLLM image reference, preferably @sha256:...
@@ -775,7 +1035,7 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 \
 }
 </code></pre>
 <p>Do not assume that an empty or text-only response demonstrates visual correctness. Use a known-answer image and verify the extracted content. Then inspect measured usage and confirm how the server accounts for image inputs.</p>
-<h3 id="173-two-real-image-serving-inputs">17.3 Two real-image serving inputs</h3>
+<h3 id="183-two-real-image-serving-inputs">18.3 Two real-image serving inputs</h3>
 <p>Create a JSONL file on the <strong>client</strong> with actual readable assets. Replace the paths below with immutable files whose checksums are saved in your manifest:</p>
 <pre><code class="language-json">{&quot;texts&quot;:[&quot;Read the invoice number and total.&quot;],&quot;images&quot;:[&quot;/data/vlm/invoice-017-page-1.png&quot;],&quot;output_length&quot;:128}
 {&quot;texts&quot;:[&quot;Identify the button that opens order details.&quot;],&quot;images&quot;:[&quot;/data/vlm/order-list.png&quot;],&quot;output_length&quot;:64}
@@ -798,10 +1058,10 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 \
 <pre><code class="language-json">{&quot;session_id&quot;:&quot;invoice-017&quot;,&quot;turns&quot;:[{&quot;text&quot;:&quot;Read the invoice number.&quot;,&quot;image&quot;:&quot;/data/vlm/invoice-017-page-1.png&quot;,&quot;output_length&quot;:64},{&quot;text&quot;:&quot;Now read the total on the same page.&quot;,&quot;image&quot;:&quot;/data/vlm/invoice-017-page-1.png&quot;,&quot;delay&quot;:300,&quot;output_length&quot;:64}]}
 </code></pre>
 <p>Select <code>--custom-dataset-type multi_turn</code> for that format; its delay is in milliseconds. Before scaling it, inspect the accumulated wire messages, whether history includes live responses, and whether repeating the image creates extra historical image parts. A controlled payload count is essential when <code>limit-mm-per-prompt</code> applies to the full accumulated prompt. For fixed recorded-history replay, implement and verify that policy explicitly rather than assuming the simple loader is semantically identical to Weka replay. <a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/multi_turn.py">Multi-turn implementation</a></p>
-<h3 id="174-promote-the-smoke-test-to-a-benchmark">17.4 Promote the smoke test to a benchmark</h3>
+<h3 id="184-promote-the-smoke-test-to-a-benchmark">18.4 Promote the smoke test to a benchmark</h3>
 <p>After real image handling works, use a substantial stratified dataset and a declared duration/task count, run repetitions, collect the full manifest, and add engine telemetry. Decide whether images are unique or reused and whether the server is cold or warm. Check the load generator's CPU, network, and scheduling lag before attributing saturation to the model server.</p>
 <p>Inspect <code>profile_export.jsonl</code>, <code>profile_export_aiperf.json</code>, errors, actual output lengths, and server metrics before building a chart. Only after the measurement contract is sound should you integrate automatic uploads and a comparison UI.</p>
-<h2 id="18-experiment-plan-and-acceptance-criteria">18. Experiment plan and acceptance criteria</h2>
+<h2 id="19-experiment-plan-and-acceptance-criteria">19. Experiment plan and acceptance criteria</h2>
 <h3 id="phase-1-prove-measurement-correctness">Phase 1: prove measurement correctness</h3>
 <p>Use a local stub streaming endpoint to verify timestamp boundaries, usage parsing, errors, missing usage, chunked outputs, one-token outputs, and cancellation. This validates the client/reducer integration without paying for GPUs. Then send two known-answer images to the real endpoint and verify that the image content reaches the model.</p>
 <p>Acceptance: stored payload references identify the actual images; all timestamp units and boundaries are documented; two known request records produce independently checked metric values; errors remain visible; a one-token response has no fabricated ITL.</p>
@@ -873,13 +1133,13 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 \
 </tbody>
 </table></div>
 <p>This is an experiment design, not a recommendation to execute the Cartesian product immediately. Establish one baseline, isolate sensitivities, and expand only where a result answers a decision you need to make.</p>
-<h2 id="19-the-decisions-this-study-supports">19. The decisions this study supports</h2>
+<h2 id="20-the-decisions-this-study-supports">20. The decisions this study supports</h2>
 <p><strong>Use AIPerf's generic multimodal client first.</strong> It already addresses streaming load generation and real image input. You do not need to rebuild that layer just to measure a VLM endpoint.</p>
 <p><strong>Treat AgentX's coding replay as a methodology and scheduler reference.</strong> Its workload shape, warmup, tree accounting, and cache controls are useful. Its synthetic text corpus and standardized acceptance policy are not evidence about your screenshot/document tasks. A visual replay adapter and its protocol need their own identity.</p>
 <p><strong>Extract the diagnostic evidence chain from InferenceX-app.</strong> The detail view, distributions, synchronized telemetry, replay-aware timeline, configuration navigation, and raw-artifact provenance are more valuable for your use case than copying the public leaderboard wholesale.</p>
 <p><strong>Add a live agent controller and task evaluator for product claims.</strong> This is the missing bridge from “serves agent-shaped requests quickly” to “completes visual tasks reliably.” The VLM result page should join those outcomes to serving diagnostics without conflating them.</p>
 <p>The open project choices are the VLM/model family, available GPU/backend, exact screenshot/document task distribution, action/environment adapter, and acceptable success/latency thresholds. None is necessary to understand the mechanism; all are necessary before making a deployment recommendation from benchmark results.</p>
-<h2 id="20-evidence-limitations-and-source-map">20. Evidence, limitations, and source map</h2>
+<h2 id="21-evidence-limitations-and-source-map">21. Evidence, limitations, and source map</h2>
 <p>This study inspected public code and live UI, traced pinned implementations, and executed an illustrative metric fixture through the actual InferenceX Python reducers. It did not launch a GPU model, replay the real coding corpus, assess VLM accuracy, inspect private fleet infrastructure, or establish speed/cost rankings for your application. The Docker and AIPerf commands are source-grounded templates requiring validation on your chosen deployment.</p>
 <p>Some checked-in prose is stale or broader than the code it describes. The single-node agentic README still calls the path experimental and unpublished, while the live site exposes AgentX points and telemetry. Documentation line-number links also drift. This guide uses the inspected implementation and live observation for behavior and supplies commit-pinned file links, rather than treating every README sentence as current.</p>
 <p>The earlier overview's system diagram remains useful context, but the key correction is methodological: <strong>replaying an agent's traffic structure, sending real images, and evaluating a live agent are separate capabilities that must be connected deliberately.</strong></p>
@@ -1100,6 +1360,66 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 \
 <td>Conversation, Turn, media and branch data contracts</td>
 </tr>
 <tr>
+<td>H23</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py">src/aiperf/timing/branch_orchestrator.py</a></td>
+<td>Child creation, overlap dispatch, delayed joins, failures and cleanup</td>
+</tr>
+<tr>
+<td>H24</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/issuer.py">src/aiperf/credit/issuer.py</a></td>
+<td>Turn admission, session/prefill slots and credit dispatch</td>
+</tr>
+<tr>
+<td>H25</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/callback_handler.py">src/aiperf/credit/callback_handler.py</a></td>
+<td>Request completion and first-token control flow</td>
+</tr>
+<tr>
+<td>H26</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/sticky_router.py">src/aiperf/credit/sticky_router.py</a></td>
+<td>Worker affinity, least-loaded routing and fork reference counts</td>
+</tr>
+<tr>
+<td>H27</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/worker.py">src/aiperf/workers/worker.py</a></td>
+<td>Asynchronous request execution and separate records/control paths</td>
+</tr>
+<tr>
+<td>H28</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/conversation_source.py">src/aiperf/timing/conversation_source.py</a></td>
+<td>Conversation template sampling and fresh child execution identities</td>
+</tr>
+<tr>
+<td>H29</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/concurrency.py">src/aiperf/timing/concurrency.py</a></td>
+<td>Client session and prefill concurrency controls</td>
+</tr>
+<tr>
+<td>H30</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/structs.py">src/aiperf/credit/structs.py</a></td>
+<td>One-request credit contract and root/parent/session identities</td>
+</tr>
+<tr>
+<td>H31</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/loop_scheduler.py">src/aiperf/common/loop_scheduler.py</a></td>
+<td>Pending timers, running coroutines and per-tree timer ownership</td>
+</tr>
+<tr>
+<td>H32</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/replay_dependencies.py">src/aiperf/timing/replay_dependencies.py</a></td>
+<td>Recorded cross-stream completion frontiers and runtime barriers</td>
+</tr>
+<tr>
+<td>H33</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/dispatch.py">src/aiperf/credit/dispatch.py</a></td>
+<td>Issued, deferred and rejected child lifecycle outcomes</td>
+</tr>
+<tr>
+<td>H34</td>
+<td><a href="https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/phase/runner.py">src/aiperf/timing/phase/runner.py</a></td>
+<td>Runtime wiring of phases, replay barriers and branch orchestration</td>
+</tr>
+<tr>
 <td>A01</td>
 <td><a href="https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/ingest-ci-run.ts">packages/db/src/ingest-ci-run.ts</a></td>
 <td>Workflow artifacts to stored benchmark observations</td>
@@ -1157,7 +1477,7 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 \
 </tbody>
 </table></div>
 <!-- SOURCE_DEFINITIONS --></main></div>
-<footer>Revision 2. Public code + live UI + verified illustrative metric calculations. No GPU benchmarks or live agent evaluations were run.</footer>
+<footer>Revision 3. Public code + live UI + verified illustrative metric and traffic calculations. No GPU benchmarks or live agent evaluations were run.</footer>
 <script>
 const bar=document.getElementById('progress');const links=[...document.querySelectorAll('.toc a')];const heads=[...document.querySelectorAll('main h2')];function sync(){const total=document.documentElement.scrollHeight-innerHeight;bar.style.width=(total>0?scrollY/total*100:0)+'%';let current=heads[0];for(const h of heads){if(h.getBoundingClientRect().top<160)current=h;}for(const a of links)a.classList.toggle('active',!!current&&a.getAttribute('href')==='#'+current.id);}addEventListener('scroll',sync,{passive:true});sync();
 </script></body></html>

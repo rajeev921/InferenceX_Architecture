@@ -2,7 +2,7 @@
 
 A code-level study of workload reconstruction, replay scheduling, measurement, serving, evaluation, and reusable result visualization.
 
-**Revision 2 · 24 September 2026.** Focus: image-based agents that read screenshots and documents and invoke tools. This replaces the earlier architecture overview. **Verified implementation**, **interpretation**, and **proposed design** are distinguished throughout. No GPU benchmark or live agent evaluation was run for this study; numerical teaching examples are explicitly illustrative.
+**Revision 3 · 24 September 2026.** Focus: image-based agents that read screenshots and documents and invoke tools. This replaces the earlier architecture overview. **Verified implementation**, **interpretation**, and **proposed design** are distinguished throughout. No GPU benchmark or live agent evaluation was run for this study; numerical teaching examples are explicitly illustrative.
 
 ## 1. The answer for your use case
 
@@ -28,7 +28,7 @@ The study follows InferenceX commit `5abd17e2ef546bd557608b370a8ff6123a170cbf`, 
 
 The local gitlink remains under `utils/aiperf`, and the package/command is still named `aiperf`. Do not assume that an arbitrary `pip install aiperf` release is the exact harness used by a published InferenceX point. Pin the source revision and resolved dependencies. [Submodule declaration][B15] · [Harness package metadata][H17]
 
-**Reading route:** sections 2–8 explain the existing benchmark; 9–11 explain what changes for vision; 12–16 define the toolbox and result representation to build; 17–19 give runnable command templates, experiment controls, and implementation milestones.
+**Reading route:** sections 2–9 explain the existing benchmark, with agent creation, orchestration, and traffic in chapter 5; 10–12 explain what changes for vision; 13–17 define the toolbox and result representation to build; 18–20 give command templates, experiment controls, and implementation milestones.
 
 ## 2. Architecture: four responsibilities, three codebases
 
@@ -142,9 +142,205 @@ General AIPerf supports forked context as well as fresh spawned conversations. T
 
 The profile duration bounds admission; in-flight work and export can add time afterward. Warmup, preparation, drain, and measurement are separate intervals. Raw timestamps determine which denominator a metric uses. Short runs made with `--unsafe-override` are useful integration smoke tests but carry `submission_valid=false` under the scenario. Canonical scenario duration must be at least 900 seconds; the scenario defaults to 1,800 seconds, while the InferenceX matrix's normal agentic duration defaults to 3,600 seconds. [Scenario][H04] · [Matrix defaults][B19]
 
-## 5. What is measured, with exact arithmetic
+## 5. How agents are created, orchestrated, and turned into traffic
 
-### 5.1 A request has several different timestamps
+This chapter follows the actual runtime objects and events. The word **agent** is overloaded: a real application agent makes decisions and acts; an AgentX replay agent is a scheduled conversation stream reconstructed from a capture. A benchmark worker is a process that sends requests, and a model replica is a server deployment. These four things need not have a one-to-one relationship.
+
+### 5.1 What “creating an agent” means in this harness
+
+AgentX does not create a new intelligent program, provision a new model, or start a Docker container for every recorded subagent. The loader creates **conversation templates**. At execution time the conversation source creates **session instances** from those templates. The workers materialize session history and send its turns to an already running inference service. Several sessions and children can use one worker and the same served model. [Conversation creation][H28] · [Worker execution][H27]
+
+The levels are:
+
+| Object | Created from | Lifetime and purpose |
+|---|---|---|
+| Captured trace | Original recorded application traffic | Source evidence of observed request shapes, timestamps, and subagent markers |
+| Conversation template | Loader reconstruction | Reusable sequence of turns, model labels, timing, branches, and prerequisites |
+| Replay session | `ConversationSource.next()` or `start_branch_child()` | One execution instance, identified by a new `x_correlation_id` |
+| Session tree | A root and all descendants | Owns one configured replay-concurrency slot until all work terminates |
+| Credit | One eligible turn | Permission and metadata for one inference request; not a billing credit |
+| Worker `UserSession` | Conversation template plus current runtime identity | Client-side history and turn position kept across requests |
+| HTTP request | Endpoint serialization of that turn/history | The actual model-serving work whose latency and output are measured |
+
+`conversation_id` names the reusable dataset template. `x_correlation_id` names this particular execution. A child gets its own correlation ID, the immediate parent's correlation ID, the tree's root correlation ID, and `agent_depth = parent_depth + 1`. Replaying the same source trace twice creates distinct execution identities. Grouping only by source ID would merge separate executions and corrupt concurrency and latency analysis. [Session creation][H28] · [Credit fields][H30]
+
+For a live VLM agent, creation has an additional meaning: initialize an agent policy, instructions, model route, tool registry, working memory, task/environment identity, budgets, and termination rules. That policy will interpret actual model outputs. These proposed application objects are not supplied by creating an AgentX `SampledSession`.
+
+### 5.2 How the loader reconstructs parent/child relationships
+
+The Weka loader emits a root conversation and child conversations for captured subagent entries. It can split a captured agent into several context chains using hash-prefix relationships; one captured subagent marker can therefore yield several replay conversations. A replay conversation count is not automatically the original application's count of independently reasoning agents. [Weka loader][H02]
+
+For an explicit captured subagent, the loader finds the preceding retained parent turn in the recorded entry order. That turn gets a branch ID. It then finds the first later parent turn whose recorded start reaches or exceeds the child's recorded end, using a small equality tolerance. That later turn gets a `SPAWN_JOIN` prerequisite. Children with the same spawning turn and joining turn can share a branch group.
+
+For example, if children A, B, and C end at recorded times 6, 12.5, and 24, while later parent turns start at 6 and 20, A gates the first later parent turn, B gates the second, and C is background work. The parent need not wait for B before continuing the turn gated only by A. If no retained parent turn precedes an explicit subagent, the loader drops that orphan rather than inventing a spawn point. Detected flat chains use their own fallback rules; do not generalize the explicit-subagent rule to every reconstructed stream.
+
+This is **reconstructed dependency structure**. It is not proof that the original program issued an explicit `await child_A` at that exact point, or that the benchmark recovered the application's source-level plan. For your own VLM captures, record explicit spawn, await, cancellation, and tool-result-consumption events so fewer dependencies must be inferred.
+
+### 5.3 Three orchestration layers operate independently
+
+**Experiment orchestration** chooses model/configuration combinations, obtains hardware, starts serving, launches the client, and publishes artifacts. InferenceX workflows and recipes own this layer.
+
+**Replay orchestration** chooses session templates, advances phases, tracks dependency gates, issues requests, and recycles drained lanes. `AgenticReplayStrategy`, `BranchOrchestrator`, `ReplayBarrierCoordinator`, the credit components, and `SessionTreeRegistry` own this layer.
+
+**Model-server scheduling** admits requests to execution, batches prefill/decode work, allocates KV cache, and routes distributed computation. The inference engine owns this layer. A server can batch unrelated replay agents together; the replay parent/child structure does not itself create GPU isolation.
+
+The optional live **application-agent orchestrator** would decide which tools or agents to call based on actual answers and observations. That is a fourth responsibility to add for task evaluation. Neither a GitHub Actions job nor a GPU batch scheduler replaces it.
+
+![Replay orchestration components and illustrative agent traffic](agentx-agent-orchestration.svg)
+
+### 5.4 Follow one request through the execution pipeline
+
+1. **Select or resume a session.** The sampler supplies a root template, or a branch selects a known child template. A new instance carries its replay identity and tree ownership. Startup may resume the t* snapshot instead of turn zero.
+2. **Establish eligibility.** The replay strategy and timer scheduler establish when a turn is due. A parent join checks required children, and recorded cross-stream barriers check predecessor completion. Being present in the dataset does not mean a request can be sent immediately.
+3. **Admit the turn.** `CreditIssuer` checks stop conditions and obtains the applicable client concurrency slots. A new root takes a session slot; children inherit their tree's slot. An optional prefill limiter applies per request. Final admission is checked again before issuing.
+4. **Create and route the credit.** The credit identifies the phase, conversation, execution, turn, depth, root/parent, issue time, endpoint selection, cache marker, and any generation override. The sticky router chooses a worker and keeps a conversation's turns together.
+5. **Build the request.** On a session miss, the worker retrieves the conversation and creates `UserSession`. It advances to the requested turn, applies the configured context/history behavior, and lets the endpoint adapter serialize the request. Cache-bust markers and warmup output limits affect this construction.
+6. **Perform streaming inference.** `InferenceClient` and the transport send HTTP to the server and consume the response stream. The worker creates request timing and result evidence. A first-token control notification is emitted when a downstream control feature requires it; this is separate from retaining stream timing for metrics.
+7. **Return scheduling control.** The worker returns `CreditReturn` on completion, error, or cancellation. The callback handler updates accounting and releases applicable request-level limits. It routes child terminal outcomes to the branch orchestrator and offers parent completions for branch creation/join handling.
+8. **Continue, wait, or retire.** The next turn is scheduled if eligible; a gated parent waits; a completed tree releases its slot and may recycle. Request records separately enter the records/metrics pipeline for export.
+
+The worker uses asynchronous tasks for credit execution and a typed messaging path to the router; the inspected router uses ZeroMQ communication. A logical agent is not a dedicated operating-system thread. More workers can improve client throughput, but more workers alone do not create more replay trees. [Issuer][H24] · [Router][H26] · [Worker][H27] · [Callbacks][H25] · [Timer scheduler][H31]
+
+### 5.5 SPAWN and FORK are different context operations
+
+**SPAWN** starts a child with its own conversation context. The Weka path uses this mode. It still records the parent and root identities, and may use the parent's worker while its routing entry exists. Shared ancestry does not mean automatic copying of every parent message.
+
+**FORK** starts from the parent's accumulated client history. The generic DAG machinery supports it. Worker affinity and reference counts keep the parent's state available for child seeding. The current session-manager implementation separates creation from `seed_from_parent`; this matters when following older comments that describe cloning entirely inside `create_and_store`.
+
+Forking client history does not clone a GPU process or guarantee a KV-cache hit. The server must receive a compatible prefix and have valid reusable cache state on the selected backend. A client-side worker cache stores conversation objects; a serving-side KV cache stores model activations. They are different caches. [Session manager][H09] · [Branch modes and routing][H23] · [Sticky entries][H26]
+
+The replay tree's cache marker also persists through its descendants. This preserves an intended prefix-sharing domain inside one tree while separating repeated source traces across trees. It does not recreate every production router's placement policy.
+
+### 5.6 Exactly when does a child start?
+
+The common path intercepts completion of a parent turn, reads that turn's declared branch IDs, creates child session instances, registers their dependency gates, and dispatches their first turns. **Registration precedes dispatch** so a child that finishes quickly cannot satisfy an incompletely registered join or prematurely drain a tree. Pending delayed children count as outstanding work before their first HTTP request begins. [Branch dispatch][H23]
+
+SPAWN children may have a recorded offset between branch creation and their first request. The scheduler preserves that offset. FORK children need the parent's completed response/history and start through the completion path.
+
+There is also an important overlap path: `BranchOrchestrator.on_credit_issued()` can schedule SPAWN branches when the captured branch began before the declaring root request ended. At the inspected revision it checks a depth-zero parent, replay scope, valid parent timestamps/duration, and SPAWN mode. It schedules relative to the recorded parent start and marks that branch as already dispatched so the eventual return does not spawn it twice. This feature should not be described as arbitrary nested FORK overlap.
+
+During ordinary cache priming, branch interception is disabled; accelerated warmup enables additional replay advancement. Thus “child starts after parent completion” is an incomplete description across all phases and trace shapes.
+
+### 5.7 Joins have both a dependency condition and a time condition
+
+The branch orchestrator tracks expected and completed child identities for each prerequisite. Completed identities are a set, protecting against duplicate completion notifications. A prerequisite that has not yet been registered does not count as satisfied merely because its current count is zero.
+
+A parent can keep executing intermediate turns while its children run. It suspends only when its **next** turn is gated by unfinished prerequisites. One child can contribute to more than one gate; a gate can require several branches. This is a directed dependency graph layered over the parent/child ownership tree.
+
+For a blocked timed join, the parent resumes after **both** all required terminal child outcomes and its replay deadline are ready. Conceptually:
+
+```text
+parent eligible time = max(recorded-delay deadline, required-child completion times)
+actual HTTP start    = eligible time + further admission/routing/transport waiting
+```
+
+The equation describes this join boundary, not every timer in the system. Startup snapshots, idle-time compression, interval barriers, server queueing, and stop conditions can introduce other constraints. A background child creates no parent join, but still holds the whole tree's slot until it terminates. [Join state and release][H23] · [Tree accounting][H08]
+
+### 5.8 Recorded interval barriers preserve more than explicit joins
+
+The Weka loader also installs cross-stream `replay_predecessors`. Within each replay scope, it examines recorded request intervals. For another stream, the latest request known to have completed by the target's recorded start can become a predecessor; redundant predecessors are pruned. Overlapping intervals do not generate that completion edge. Exact end/start boundaries are ordered, while equal starts remain unordered. Missing or invalid durations follow a deterministic zero-duration fallback. [Dependency installation][H02] · [Interval inference][H32]
+
+Consider a long request A0 spanning seconds 0–10 and another stream with B0 at 2–3 and B1 at 4–5. Both B requests overlap A0. B1 should follow B0 without being forced to wait for A0. A later B2 beginning at 10 can depend on A0. Collapsing every connected overlap into one simultaneous burst would misrepresent this traffic.
+
+`ReplayBarrierCoordinator` maintains the completed frontier and pending dispatches **per runtime root**, so replaying the same source twice does not share completion state. The phase runner wires these barriers for `AGENTIC_REPLAY`; activation/handoff logic separates ordinary cache priming from subsequent replay. Scope boundaries also matter: explicit captured subagent contexts can have separate interval scopes from the top-level reconstructed streams. The loader does not infer every possible pairwise ordering across unrelated agents. [Phase wiring][H34]
+
+These inferred edges preserve recorded ordering; they do not prove semantic causality. A later request might have happened after another request without consuming its result. Your proposed visual trace format should preserve an `edge_origin` such as `explicit_tool_dependency`, `explicit_agent_join`, or `inferred_recorded_interval` so readers can distinguish the evidence.
+
+The included `agent-traffic-walkthrough.json` checks the interval example using the exact source definitions of `infer_cross_stream_predecessors` and its data classes, extracted without changing them. This is an algorithm check, not a full replay run.
+
+### 5.9 A complete timed example: one tree, seven requests
+
+The following **illustrative authored branch scenario** isolates the scheduling concepts. It assumes no extra interval barriers, startup warmup, idle compression, retries, or client/server queue delays. It is not a measured Weka trace. All times are seconds after this example's start; intervals are half-open.
+
+| Stream / request | Start–end | Why it can start |
+|---|---|---|
+| Parent P0 | 0–2 | Root admitted; one tree slot acquired |
+| Child A0 | 2–5 | Fresh child from P0; gates P1 |
+| Child B0 | 3–7 | Child first-request offset of one second; gates P2 after its final turn |
+| Child B1 | 8–11 | B0 finishes, then one second of recorded idle |
+| Background C0 | 2–20 | Fresh background child; no parent join |
+| Parent P1 | 7–9 | Five-second delay after P0 ends; A has already finished at 5 |
+| Parent P2 | 11–13 | One-second delay after P1 would permit 10, but B finishes at 11 |
+
+At time 4, A0, B0, and C0 are simultaneous HTTP requests even though configured tree concurrency is **one**. At time 8.5, P1, B1, and C0 overlap. The parent finishes at 13, but C0 keeps the tree alive until 20. Starting a replacement root at 13 would violate the one-tree limit.
+
+The seven request durations sum to 34 request-seconds. Across this 20-second interval, average in-flight HTTP requests are `34 / 20 = 1.7`; peak in-flight requests are 3; completed request throughput is `7 / 20 = 0.35 requests/s`; tree completion throughput is `1 / 20 = 0.05 trees/s`. These are four different quantities. The example's mean request duration is `34 / 7 ≈ 4.857 seconds`; multiplying that by request throughput recovers 1.7. This finite-window accounting identity works here because every request is wholly contained in the window. Production windows need explicit treatment of requests crossing their boundaries.
+
+If the model takes longer on B1, P2 may start later. If it takes longer on background C0, the next tree starts later even though the parent's answer time may stay unchanged. If P1 becomes very fast, P2 can still be dominated by B's completion. That is why an average token rate alone does not explain agent-traffic capacity.
+
+### 5.10 Failures, cancellation, and termination are part of orchestration
+
+The harness distinguishes a child dispatch that was issued, deferred, or rejected. Deferral retains dependency tracking for later issuance or phase handoff. Terminal refusal must drain the tracking state; otherwise a parent could wait forever for a request that will never be sent. A child truncated by a stop condition is counted separately from a normally completed child. [Dispatch results][H33] · [Branch cleanup][H23]
+
+The default DAG error policy has `AIPERF_DAG_FAIL_FAST=false`: a child error is recorded and treated as terminal for join bookkeeping so replay can proceed. Enabling fail-fast uses a different abort path for the affected parent and tracked siblings. Neither policy makes the failed child's answer correct. A released join means the scheduler has accounted for terminal work, not that a business task succeeded. [Error-policy defaults][H21] · [Child error handlers][H23]
+
+When the root's final turn returns, newly declared children must be registered before `on_root_terminal()` can consider releasing the tree. The registry releases exactly once after the root is terminal and its outstanding descendants are zero. Phase cleanup cancels pending work, stops new dispatch, and releases remaining resources without launching replacement roots. Context-overflow terminals also need special handling because a conversation can end before its authored final turn. [Callbacks][H25] · [Registry][H08]
+
+For a live visual agent, specify application-level outcomes separately: a failed OCR helper may trigger a retry, fallback model, partial result, or failed task. Retain the actual policy decision and charge all retries to latency and cost. Do not silently translate “child errored, join drained” into “task passed.”
+
+### 5.11 What determines agent traffic and how to describe it
+
+Agent traffic is an evolving mix of **arrivals, payloads, dependencies, and feedback**. Important dimensions include:
+
+| Dimension | Record or derive | Why it changes serving performance |
+|---|---|---|
+| Tree arrivals and admission | Scheduled/start times, external queue wait, live-tree occupancy | Closed-loop replenishment reacts to completion; external arrivals can keep accumulating |
+| Fan-out and depth | Children per spawn, active children, tree depth, join width | Bursts can exceed the configured root-concurrency count |
+| Turns and context growth | Requests per stream/tree; input/output lengths by turn; resets/compaction | Later turns can create more prefill, cache, and memory pressure |
+| Timing and dependencies | Inter-turn gap, delayed spawn, parent blocked time, background tail | Exposes the critical path and periods where capacity is occupied without model work |
+| Prefix reuse | Shared instruction/history blocks; eviction; worker and backend route | Influences how much context is recomputed and where cache can be reused |
+| Model mix | Recorded source model, resolved served model, endpoint and role | Remapping every helper to one model changes the workload's execution cost |
+| Visual load | Image count, bytes, resolution, pages/patches, processing settings | Text token counts alone do not describe encoder or preprocessing load |
+| Tools and environment | Tool type, duration, error, state change, observation size | Tools create waits and the next request's content; live behavior creates feedback |
+| Failure and termination | Error, timeout, retry, cancellation, truncation, terminal reason | Success-only views can hide dropped demand and wasted work |
+
+Report concurrency at each layer: admitted trees, active conversation streams, in-flight client HTTP calls, requests waiting inside the server, and requests/tokens the engine actually batches. Optional client prefill concurrency is another control: its slot lasts until first-token notification or terminal fallback, so it is a client-side proxy for outstanding pre-first-token work, not a count of simultaneous GPU prefill kernels. [Concurrency manager][H29] · [Issuer and callbacks][H24]
+
+A fixed number of replay lanes is a **closed-loop** experiment: slower service reduces how quickly those lanes produce subsequent demand. It measures that population under backpressure. An **open-loop** arrival test supplies a declared external arrival schedule, allowing queues to grow when service falls behind. Neither should be mislabeled as the other. For your application, include both a fixed population of active agents and a separate externally arriving task-load test, reporting requested versus achieved arrival rates and client-generator delay.
+
+Never claim a repeated synthetic corpus is the complete production distribution. Specify which roles, branch sizes, tool gaps, history lengths, images, and errors were retained or changed. Compare full distributions and cohorts, not only an average request size.
+
+### 5.12 What a real VLM agent orchestrator must add
+
+For your screenshot/document use case, a live orchestrator should create an `AgentInstance` with a task identity, optional parent identity, role, policy version, model route, context store, tool registry, environment handle, deadlines, and request/action budgets. These are proposed application contracts, not classes already implemented by AgentX.
+
+A concrete live loop is:
+
+```text
+admit task and reset environment
+create parent agent and initial observation
+while task is nonterminal and budgets permit:
+    build real messages, image references, and allowed tool definitions
+    call the configured VLM; keep streaming/timing/usage evidence
+    parse and validate a complete action or agent-delegation request
+    if delegation:
+        create child instance(s) with declared fresh/inherited context
+        schedule children with bounded parallelism and explicit join rules
+    elif tool action:
+        execute tool against the task environment; record outcome
+        capture resulting screenshot/document/tool response
+    else:
+        record proposed final answer or terminal error
+    update history from actual outputs and actual environment observations
+    checkpoint causal event identities and evaluate stopping conditions
+score final task state using independent ground truth
+publish task outcome alongside every contributing request and tool event
+```
+
+For a document-to-form task, a parent might delegate page extraction to a document-reader child, use a browser-controller child to populate fields, and wait for a verifier before declaring success. Sharing one browser introduces interference: either serialize mutating actions through an environment owner or give children isolated environments and explicitly merge results. Parallel independent page reading is often simpler to compare than two agents clicking the same mutable screen concurrently. This is a design choice to test, not an assumed optimal architecture.
+
+The delegation policy can be static (a fixed workflow) or model-driven (the model chooses when and whom to delegate). Record which one is used. A model-driven policy changes fan-out, number of turns, retries, and screenshot history across models, so live comparisons need task-level normalization. You cannot keep the whole trajectory identical and simultaneously claim to evaluate all consequences of the model's choices.
+
+For the result UI, show a **causal tree with a time axis**. A parent row contains its requests, child spawn/join links, tool spans, screenshots, and terminal score. Separate “ready but queued,” “model request,” “waiting on child,” and “waiting on tool.” Allow a user to select a long task, identify its critical path, open the exact image and action, and inspect the model/server configuration responsible. Show background work after the parent finishes and include its cost according to the declared accounting policy. This is the bridge from InferenceX-style request diagnostics to meaningful image-agent performance analysis.
+
+### 5.13 Code-reading checklist for this mechanism
+
+Start with `WekaTraceLoader` and `_install_replay_dependencies`; follow `ConversationSource.start_branch_child`; inspect `BranchOrchestrator.on_credit_issued`, `intercept`, and `_spawn_children_and_register_gates`; then follow `CreditIssuer`, `StickyCreditRouter`, `Worker._process_credit`, and `UserSession.advance_turn`. Return through `CreditCallbackHandler.on_credit_return`, the child/join handlers, `ReplayBarrierCoordinator.complete`, and `SessionTreeRegistry._maybe_release`. The source map links every file at the inspected revision. This route exposes the actual state changes behind the word “agent,” rather than assuming that a high-level class diagram explains execution.
+
+
+## 6. What is measured, with exact arithmetic
+
+### 6.1 A request has several different timestamps
 
 Do not equate “HTTP ended,” “last model content arrived,” and “the agent can act.” In the inspected harness, `request_latency` ends at the **last content response**, excluding usage-only chunks. The timeline's request end can include the remaining HTTP completion. Full-response metrics exist separately. The client also records when a credit was issued, before the worker began the HTTP request. [Request latency][H13] · [ITL calculation][H14] · [Timeline schema][A03]
 
@@ -169,7 +365,7 @@ The precise first-token classification depends on endpoint parsing, including re
 
 For a visual agent, add `t_action_ready`: the first time a complete, valid action or tool invocation can safely be parsed. A fast first token such as `{` does not mean the action is ready to execute.
 
-### 5.2 Interactivity and E2E normalized interactivity differ
+### 6.2 Interactivity and E2E normalized interactivity differ
 
 InferenceX derives the slow-tail interactivity statistic by inverting a latency percentile:
 
@@ -184,7 +380,7 @@ These are not `P90(1/ITL)` or `P90(output_tokens/request_time)`. They describe t
 
 Their ITLs are `1/99, 2/99, 3/99, 6/99` seconds. Interpolated P90 ITL is `5.1/99` seconds, yielding **19.4118 tokens/s** interactivity. Both values describe the same requests; the gap is caused by the first-token wait. The included `agentx-metric-walkthrough.json` was checked by executing the actual InferenceX reducer on this fixture. These are teaching numbers, not GPU results.
 
-### 5.3 Throughput needs a population and a time window
+### 6.3 Throughput needs a population and a time window
 
 The inspected Python reducer first excludes warmup and error-bearing records. It then computes token throughput over:
 
@@ -200,7 +396,7 @@ The duration computed from surviving requests can differ from the configured mea
 
 Input-token throughput counts reported prompt tokens, which can include reused tokens. It is not a direct measurement of newly computed prefill tokens. Keep server cache counters and actual uncached work distinct from total logical prompt volume.
 
-### 5.4 Queue-aware, effective, and active metrics
+### 6.4 Queue-aware, effective, and active metrics
 
 AIPerf defines an effective-latency family that includes the interval from credit issue to completion, exposing client-side queueing hidden by send-to-response timing. Effective time-series metrics integrate a quantity over the full window; active metrics restrict that integration to intervals where the relevant request phase is active. [Metric methodology][H16]
 
@@ -208,13 +404,13 @@ These diagnostics are useful, but a client-side “prefill” interval is not a 
 
 A queue-aware timestamp cannot invent demand absent from a closed-loop experiment. If all agents are blocked waiting for a slow server, they issue fewer future requests. For capacity planning under an independent incoming task arrival rate, also run an open-loop task-arrival experiment with an explicit arrival schedule and deadlines.
 
-### 5.5 Missing data is a state, not zero
+### 6.5 Missing data is a state, not zero
 
 One-token outputs have no ordinary `(O−1)` ITL. Missing usage counts can invalidate token-rate metrics. Absent image-encoder telemetry does not imply zero encoder latency. Store a sample count and reason for every missing family. The live detail page inspected for result `442369` showed 5,029 ISL/OSL samples and 5,028 interactivity points, a visible example of different metric populations. This observation alone does not prove why one sample was excluded. [Observed point](https://inferencex.semianalysis.com/inference/agentic/442369)
 
-## 6. Speculative decoding and benchmark validity
+## 7. Speculative decoding and benchmark validity
 
-### 6.1 Some throughput runs deliberately standardize acceptance
+### 7.1 Some throughput runs deliberately standardize acceptance
 
 Speculative decoding proposes several draft tokens and verifies them with the target model. Speed depends partly on how many are accepted. InferenceX maintains golden mean acceptance lengths, measured on the coding category of SPEED-Bench, for particular model/mode/draft-length combinations. Comparable throughput recipes can force a standardized acceptance behavior. Quality evaluation must use real verification. [Golden acceptance protocol][B06]
 
@@ -224,7 +420,7 @@ The interpretation is a normalized system comparison under a declared acceptance
 
 The target verification token convention also matters: golden AL includes the guaranteed target token. Engine knobs that count only accepted draft tokens need a conversion. Copy the correct engine adapter, not just the same numeric constant. [Engine-specific conventions][B06]
 
-### 6.2 Validity has multiple gates
+### 7.2 Validity has multiple gates
 
 The AgentX scenario locks streaming, timing mode, cache-busting policy, `ignore_eos=true`, loader eligibility, no arbitrary input truncation, and minimum duration. It includes a 95% required latency-signal duration-coverage setting; this is not simply “95% of requests succeeded.” Runtime metadata can further mark cancellation, context overflow, and coverage problems. The default scenario context-overflow threshold is 1%. [Scenario][H04] · [Configuration validator][H05] · [Runtime record validation][H19] · [Threshold defaults][H21]
 
@@ -234,7 +430,7 @@ InferenceX adds a **separate** generic request-error gate. Its inspected common 
 
 The scenario's custom-loader restrictions also mean you cannot replace the coding corpus with arbitrary image traces and continue claiming an official comparable AgentX submission. A generic AIPerf multimodal experiment or a separately named VLM replay scenario is the correct identity. [Loader allowlist validation][H05]
 
-## 7. One concrete InferenceX job from YAML to artifacts
+## 8. One concrete InferenceX job from YAML to artifacts
 
 The inspected key `qwen3.5-fp8-b200-sglang-agentic-mtp` specifies a dated SGLang container image, `Qwen/Qwen3.5-397B-A17B-FP8`, runner pool `cluster:b200-nscale`, and `agentic-coding` search spaces. It varies TP4/TP8, concurrency, and no-offload versus DRAM HiCache. An explicit concurrency list expands into several comparable deployment points. [Master configuration][B03]
 
@@ -258,9 +454,9 @@ The evaluation path can use lm-evaluation-harness tasks, SWE-bench machinery, an
 
 For VLM integration, add a vision-aware evaluator with its own dataset and score contract. Merely putting images into a throughput input file will not make `run_eval` compute document or computer-use correctness.
 
-## 8. From a raw request to a dashboard point
+## 9. From a raw request to a dashboard point
 
-### 8.1 The artifact-to-chart data lineage
+### 9.1 The artifact-to-chart data lineage
 
 `profile_export.jsonl` is the request-level evidence. `profile_export_aiperf.json` contains harness aggregates and metadata. Server metrics exports carry engine observations and time slices. The Python AgentX reducer combines these with deployment metadata into `request_metrics` and `server_metrics` containers. Keep raw evidence because later reducers may change or need additional fields. [Artifact reader][B10] · [Aggregate builder][B11]
 
@@ -270,7 +466,7 @@ The trace ingestion coordinator computes aggregate distributions, server chart s
 
 E2E normalized interactivity follows a particularly instructive path: raw request latencies and output lengths → per-request ratios → stored ratio percentile bundle → reciprocal at read time → typed React query → chart. The API's preferred path reads precomputed statistics; old or missing bundles can fall back to parsing saved profile blobs and write back upgraded projections. That is reprocessing existing evidence, not a new inference run. [Database read path][A05] · [React hook][A06]
 
-### 8.2 What a UI click does today
+### 9.2 What a UI click does today
 
 On the public dashboard, a model/scenario selection changes browser state and read queries over existing benchmark rows. A point selection opens a result-ID page. A concurrency navigator chooses another saved point. Phase tabs and metric controls select projections, populations, or visualizations. They do not queue a new GPU experiment. [Main chart data hook][A10] · [Detail view URL state][A08]
 
@@ -278,13 +474,13 @@ The live point page inspected for `442369` was a Qwen3.5 / B200 / FP8 / SGLang r
 
 The cache percentages on that page are engine-defined metrics. Some backends expose combined versus separate tiers, and the UI accounts for this. Do not blindly add two percentages unless they share a denominator and describe disjoint hits. [Point metadata display][A09]
 
-### 8.3 What is worth extracting
+### 9.3 What is worth extracting
 
 The reusable product idea is **a navigable evidence chain**: a comparison point opens the exact run; the run opens its distributions and timeline; a request opens its inputs, outputs, context, and resource state. Keep that chain while changing the measurement contract for visual tasks. Copying only a scatterplot would reproduce the look without the explanatory power.
 
-## 9. VLM support: what exists and what you must add
+## 10. VLM support: what exists and what you must add
 
-### 9.1 Existing support is in the general harness
+### 10.1 Existing support is in the general harness
 
 The pinned harness includes `single_turn` and `multi_turn` loaders with image fields. The general chat endpoint serializes images into OpenAI-style `image_url` content parts and supports authored image UUIDs. A vision tutorial demonstrates actual image inputs and generated images. These are real building blocks you can use immediately with an appropriate VLM server. [Multi-turn loader][H11] · [Chat endpoint][H12] · [Vision tutorial][H15]
 
@@ -304,13 +500,13 @@ By contrast, the Weka schema used by canonical AgentX has integer cache block id
 
 One specific compatibility limit matters: the pinned `multi_turn` loader rejects `--uuid-and-strip`. Its error directs that specialized image reuse mode to `single_turn` with session-grouped rows. Do not combine every multimodal feature flag just because each is supported somewhere. Verify the loader/endpoint combination you actually select. [Loader check][H11]
 
-### 9.2 A vision-capable model label does not certify a vision workload
+### 10.2 A vision-capable model label does not certify a vision workload
 
 A model may support images while a benchmark run sends only reconstructed text. A model may also be served with particular modality restrictions or processor options. The evidence for a VLM run is the actual request payload, model/processor configuration, and image-aware telemetry, not the model family name displayed on the chart.
 
 For every experiment, make the first audit simple: save a redacted wire request and verify that its content contains a real image reference or data URL, the server accepted it, and changing the image can change a relevant answer. The latter is a semantic smoke test, not a full quality benchmark.
 
-## 10. The VLM serving path you need to measure
+## 11. The VLM serving path you need to measure
 
 ![Image-agent inference and action loop](vlm-agent-serving-flow.svg)
 
@@ -331,7 +527,7 @@ screenshot / page rasterization
 
 This is a conceptual decomposition. Actual VLM architectures and serving engines can fuse, overlap, relocate, or cache stages. Some use cross-attention rather than treating every visual feature as an ordinary decoder token. Discover the selected model's path before assigning token counts or memory formulas.
 
-### 10.1 Image resolution is workload, not decoration
+### 11.1 Image resolution is workload, not decoration
 
 Two requests with “one image” can have very different cost: a compressed 800×600 screenshot, a high-DPI document page, and several dynamically tiled crops do not present the same encoder workload. Record original dimensions, effective dimensions after processing, encoded byte size, media format, number of pages/images, crop policy, and processor configuration. For document agents, also record rasterization DPI and whether preprocessing selected or cropped pages.
 
@@ -339,7 +535,7 @@ For a simple patching scheme, a rough patch count is `ceil(H/p) × ceil(W/p)`, w
 
 Base64 also changes transport cost: the encoded payload is approximately `4 × ceil(bytes/3)` bytes before JSON overhead. URL inputs shift image fetch work to another part of the path; an already cached URL is not equivalent to a cold remote fetch. In a controlled serving test, freeze asset bytes and retrieval policy. In an end-to-end agent test, include capture, encoding, and retrieval when users pay that latency.
 
-### 10.2 There are several caches to distinguish
+### 11.2 There are several caches to distinguish
 
 | Cache | Reused object | Example confounder |
 |---|---|---|
@@ -355,7 +551,7 @@ For image identity, retain a content checksum and the processing fingerprint. A 
 
 Test at least four relevant conditions: unique images, repeated same image with changed text, slightly changed screenshots, and repeated conversation history. Label cold starts separately from steady-state warmed workloads. Do not flush every cache if the application actually benefits from reuse, and do not prewarm every asset if production is mostly unique screenshots.
 
-### 10.3 Memory and serving topology
+### 11.3 Memory and serving topology
 
 Memory pressure comes from weights, decoder KV or other recurrent state, vision tensors/activations, processor caches, workspaces, and batching. For a conventional decoder attention stack, KV bytes per token are approximately `2 × layers × KV_heads × head_dim × bytes_per_element`, before partitioning and implementation overhead. Hybrid, recurrent, compressed, or cross-attention architectures change this model. Reused prefixes also mean summing all active logical context lengths overcounts unique resident KV.
 
@@ -363,15 +559,15 @@ An image-heavy workload can bottleneck the CPU decoder, vision encoder, or prepr
 
 Start with an aggregated VLM deployment. Separate prefill/decode pools require correct KV transfer and model support. Separating image encoding additionally requires a supported feature-transfer contract, processor consistency, routing, and accounting for transfer latency and memory. A text-only prefill/decode recipe does not establish that this multimodal split works. Treat encoder disaggregation as a later experiment rather than an assumption in the initial architecture.
 
-### 10.4 Why short visual actions expose TTFT
+### 11.4 Why short visual actions expose TTFT
 
 Take two **hypothetical** configurations for a 20-token action. A has TTFT 0.8 seconds and decode rate 100 tokens/s; B has TTFT 0.2 seconds and decode rate 50 tokens/s. Using 19 post-first-token intervals, A needs about `0.8 + 19/100 = 0.99 s`; B needs about `0.2 + 19/50 = 0.58 s`. The slower decoder produces an actionable result sooner. Schema validation or buffered tool-call arguments can add further delay.
 
 A task with ten such decisions and several tools amplifies that difference. Measure action-ready and task-completion latency directly; do not predict task time by multiplying an average TTFT by an average turn count when branches, retries, and parallel tools vary.
 
-## 11. Design the three experiments separately
+## 12. Design the three experiments separately
 
-### 11.1 Experiment A: image-serving characterization
+### 12.1 Experiment A: image-serving characterization
 
 Use a fixed corpus of real screenshots and rendered document pages. Test one image, multiple images, and long histories as separate strata. Keep image processing fixed within a comparison. Use the general AIPerf image path and an already validated VLM endpoint. Begin at concurrency 1; increase load until you see latency, errors, or queue growth violate your chosen service target.
 
@@ -379,7 +575,7 @@ Two submodes are useful. **Controlled output length** isolates serving behavior 
 
 Collect client send/first-content/final-content/HTTP-end timestamps, server usage, image geometry, failures, queue metrics, CPU load, GPU memory, and available encoder/prefill/decode spans. Keep model loading and graph compilation outside steady-state metrics, but report a separate cold-start experiment if startup matters to the service.
 
-### 11.2 Experiment B: recorded visual-agent replay
+### 12.2 Experiment B: recorded visual-agent replay
 
 Record genuine application sessions with real image observations and full message/tool structure. Convert them to a dependency graph with turn IDs and explicit timing. Replay the same requests against alternate serving configurations. When the next request must remain fixed, supply the recorded assistant/tool observations instead of letting generated responses rewrite the experiment.
 
@@ -389,7 +585,7 @@ Replay must also choose a scheduling contract. A closed-loop dependency replay p
 
 A generic `multi_turn` input file is sufficient for a simple linear image conversation. It is not proof that you have preserved AgentX's full branch/join/warmup semantics. For tree replay, build an adapter to the harness's Conversation/Turn/dependency structures, validate it with small deterministic graphs, and give it an explicit scenario identity.
 
-### 11.3 Experiment C: a live image-agent loop
+### 12.3 Experiment C: a live image-agent loop
 
 Here the actual answer decides the next action and observation. The controller must implement:
 
@@ -412,7 +608,7 @@ Live evaluation requires real decoding and ordinary termination. Do not force Ag
 
 For desktop/screenshot tasks, [OSWorld](https://github.com/xlang-ai/OSWorld) supplies a concrete environment-and-task evaluation reference. For visual web tasks, [VisualWebArena](https://github.com/web-arena-x/visualwebarena) is a relevant reference. Their environment versions and evaluator definitions must be pinned; neither becomes equivalent to your production application merely by using screenshots. For document parsing, [OmniDocBench](https://github.com/opendatalab/OmniDocBench) provides document-oriented evaluation, but parser quality alone is not an agent workflow score. Use these as task/evaluator adapters where they match your use case.
 
-## 12. A worked visual-agent task and its trace
+## 13. A worked visual-agent task and its trace
 
 **Proposed teaching task:** read an invoice image, extract the invoice number and total, compare them with a seeded order record, then populate a sandbox form. Success requires the final saved fields to match ground truth, the intended order to be selected, and no duplicate submission. This combines perception, document reasoning, tool use, and environment state verification.
 
@@ -480,9 +676,9 @@ This is **your proposed normalized schema**, not an existing InferenceX or AIPer
 
 A full action follows in a separate tool event; it should not be folded into HTTP request latency. If document extraction and order lookup run in parallel, represent their dependencies and compute the task's actual elapsed time or critical path. Summing all overlapping spans would overstate wall time.
 
-## 13. Result metrics designed for real image agents
+## 14. Result metrics designed for real image agents
 
-### 13.1 Primary outcomes and denominators
+### 14.1 Primary outcomes and denominators
 
 **Task success rate** is `successful eligible task attempts / all eligible started task attempts`, under a frozen retry/attempt policy. Timeouts and model-caused failures remain in the denominator. Independently documented infrastructure-invalid runs can be separated, with their counts visible. Repeated attempts need a declared pass@k or first-attempt policy; do not select the best outcome afterward.
 
@@ -494,7 +690,7 @@ A full action follows in a separate tool event; it should not be folded into HTT
 
 For example, in an **illustrative** 10-minute observation with 100 admitted tasks, 90 completed, 80 successful, and 70 successful within a 30-second deadline, deadline goodput is `70/600 = 0.1167 tasks/s`. If the run cost is $12, cost per success is `$12/80 = $0.15`, not `$12/90`. Pending tasks need a declared drain or censored-outcome treatment before this becomes a final scored batch. These quantities answer a different question from output tokens/s.
 
-### 13.2 Secondary diagnostics
+### 14.2 Secondary diagnostics
 
 | Metric family | Store and display | Interpretation |
 |---|---|---|
@@ -507,7 +703,7 @@ For example, in an **illustrative** 10-minute observation with 100 admitted task
 
 For screenshot grounding, retain the coordinate convention: original versus resized image, crop offset, pixel versus normalized coordinates, display scale, and target bounds. A valid JSON `click(x,y)` can still fail because coordinates were interpreted in the wrong space. For document extraction, retain field normalization rules and partial-credit policy; a substring match can reward a wrong entity or amount.
 
-### 13.3 Compare within comparable cohorts
+### 14.3 Compare within comparable cohorts
 
 Never put all “VLM” runs on one undifferentiated frontier. Partition by task/dataset version, image preprocessing, task mode, quality threshold, precision, cache condition, and resource-accounting scope. For cross-model comparisons, native tokenizer output tokens are not a universal unit of useful work; task success/time or fixed semantic output requirements are more defensible primary measures.
 
@@ -515,9 +711,9 @@ A systems comparison can hold one model and image corpus fixed while changing an
 
 Use repeated runs and per-task paired comparisons where possible. Bootstrap at task/session level rather than treating many correlated turns from one task as independent samples. Report uncertainty, sample sizes, and retained populations. A confidence interval over requests does not automatically quantify uncertainty over tasks or environments.
 
-## 14. Extract the representation layer at explicit seams
+## 15. Extract the representation layer at explicit seams
 
-### 14.1 What to reuse, wrap, or replace
+### 15.1 What to reuse, wrap, or replace
 
 | Existing source area | Reuse decision | Work required |
 |---|---|---|
@@ -536,7 +732,7 @@ Use repeated runs and per-task paired comparisons where possible. Bootstrap at t
 
 The app is not a drop-in chart library. Components depend on typed hooks, metric registries, framework/hardware constants, URL state, and shared styles. Extract data contracts and pure transformations first, then make the chart components accept those contracts as props. Preserve upstream licenses/notices when reusing code; naming the repository under your account does not remove third-party code ownership.
 
-### 14.2 Suggested package boundaries
+### 15.2 Suggested package boundaries
 
 ```text
 vlm-workloads/       immutable assets, task specs, capture and replay adapters
@@ -551,7 +747,7 @@ vlm-results-ui/      comparisons, point details, task timeline, image/action vie
 
 Keep the metric package independent of React, the database, and GPU libraries. Its input should be saved normalized records and a resolved manifest; its output should be deterministic summaries with definitions, units, sample counts, and exclusions. This gives you an offline correctness check and lets you recompute historical results when a metric definition changes.
 
-### 14.3 Store evidence once; derive views reproducibly
+### 15.3 Store evidence once; derive views reproducibly
 
 Use a run manifest and content-addressed artifact store for raw messages, image references, outputs, traces, telemetry, and evaluator evidence. A relational catalog can index `runs`, `deployment_configs`, `tasks`, `task_attempts`, `requests`, `tool_events`, `assets`, `evaluations`, and `metric_projections`. Large raw payloads need not be duplicated into every catalog row.
 
@@ -559,15 +755,15 @@ Make `(run_id, task_attempt_id, request_id)` or a stable globally unique request
 
 Keep images private or sanitized as the real task requires; screenshots can carry application data. This is an architectural artifact-access requirement for your toolbox, not a requirement to publish production traces to the public InferenceX site.
 
-## 15. The UI to build for your purpose
+## 16. The UI to build for your purpose
 
-### 15.1 Comparison view
+### 16.1 Comparison view
 
 Use the main plot to compare **successful tasks/s versus P90 task latency**, with filters for task family, image workload, quality floor, serving configuration, and cache condition. Provide secondary axes/views for cost per success and serving-only tokens/s. Each point is one resolved experiment, with a visible validity state and denominator.
 
 A frontier should include only eligible runs in the selected cohort. Point A dominates B when it is no worse on the selected objectives and strictly better on at least one; the direction changes for latency/cost versus throughput/quality. A lower-resolution run with lower quality must not silently dominate a more accurate run because it is faster.
 
-### 15.2 Point-detail view
+### 16.2 Point-detail view
 
 Adapt the existing AgentX layout: run/config summary at top, distributions and telemetry beneath, sibling configuration navigation, and a deep link to artifacts. Add these VLM-specific panels:
 
@@ -579,17 +775,17 @@ Adapt the existing AgentX layout: run/config summary at top, distributions and t
 - Steps, tool time, retries, and repeated observations per task.
 - Cost and resource accounting with the exact scope shown.
 
-### 15.3 Causal task timeline
+### 16.3 Causal task timeline
 
 Show a row per task and nested agent/tool branch. Use request bars for client wait, time to first content, and remaining response; use separate tool/environment bars. Clicking a request should open the exact image/page, prompt/context reference, generated response, parsed action, coordinate overlay, before/after state, and evaluator evidence. Never infer an internal GPU phase from client timestamps without telemetry.
 
 Use shared time cursors so an action stall can be correlated with queue depth, image processing, GPU memory, and cache behavior. Preserve warmup/profiling boundaries and cancelled requests. Separate source trace identity from replay instance and task attempt identity.
 
-### 15.4 Export contract
+### 16.4 Export contract
 
 Export the resolved manifest, selected cohort, exclusions, metric definitions, sample counts, and raw artifact references with every comparison. A screenshot of a Pareto curve cannot establish reproducibility by itself. Users should be able to trace a metric back to a request population and recompute it offline.
 
-## 16. UI-to-run flow for your toolbox
+## 17. UI-to-run flow for your toolbox
 
 This is a **proposed extension**, not a description of the current public InferenceX UI.
 
@@ -614,11 +810,11 @@ Browsing existing results should use GET queries and local chart transformations
 
 GitHub Actions can be one backend: the API dispatches a workflow with a manifest hash/run ID, the runner reads that immutable manifest, and completion triggers artifact ingestion. You still need run identity, idempotency, status reconciliation, retry ownership, and resource limits. The GitHub dispatch itself is not the benchmark methodology.
 
-## 17. Practical starting point: a VLM endpoint and AIPerf
+## 18. Practical starting point: a VLM endpoint and AIPerf
 
 The following are **command templates for your Linux GPU environment**, not commands run or performance-validated in this study. They exercise Experiment A. Hardware availability, the final VLM choice, its engine compatibility, and the application dataset remain your project decisions.
 
-### 17.1 Pin the harness you are studying
+### 18.1 Pin the harness you are studying
 
 ```bash
 git clone https://github.com/SemiAnalysisAI/agentx-harness.git
@@ -632,7 +828,7 @@ python -m pip freeze > resolved-python-dependencies.txt
 
 This matches the source revision inspected under InferenceX's gitlink. A resolved dependency lock or container digest is still needed for reproducibility because source pinning alone does not pin every transitive package. The source advertises Python `>=3.11,<3.14`. [Package contract][H17]
 
-### 17.2 Start the chosen server separately
+### 18.2 Start the chosen server separately
 
 Choose a model/engine pair with verified image support. The harness tutorial uses `Qwen/Qwen2-VL-2B-Instruct` as a small integration example; that is a starting smoke-test model, not a recommendation for your final task. Pin the serving image by digest and model revision before performance comparisons. [Vision tutorial][H15]
 
@@ -670,7 +866,7 @@ The image limit is a declared test bound, not a universal optimal setting. Valid
 
 Do not assume that an empty or text-only response demonstrates visual correctness. Use a known-answer image and verify the extracted content. Then inspect measured usage and confirm how the server accounts for image inputs.
 
-### 17.3 Two real-image serving inputs
+### 18.3 Two real-image serving inputs
 
 Create a JSONL file on the **client** with actual readable assets. Replace the paths below with immutable files whose checksums are saved in your manifest:
 
@@ -704,13 +900,13 @@ A small linear multi-turn input can instead use:
 
 Select `--custom-dataset-type multi_turn` for that format; its delay is in milliseconds. Before scaling it, inspect the accumulated wire messages, whether history includes live responses, and whether repeating the image creates extra historical image parts. A controlled payload count is essential when `limit-mm-per-prompt` applies to the full accumulated prompt. For fixed recorded-history replay, implement and verify that policy explicitly rather than assuming the simple loader is semantically identical to Weka replay. [Multi-turn implementation][H11]
 
-### 17.4 Promote the smoke test to a benchmark
+### 18.4 Promote the smoke test to a benchmark
 
 After real image handling works, use a substantial stratified dataset and a declared duration/task count, run repetitions, collect the full manifest, and add engine telemetry. Decide whether images are unique or reused and whether the server is cold or warm. Check the load generator's CPU, network, and scheduling lag before attributing saturation to the model server.
 
 Inspect `profile_export.jsonl`, `profile_export_aiperf.json`, errors, actual output lengths, and server metrics before building a chart. Only after the measurement contract is sound should you integrate automatic uploads and a comparison UI.
 
-## 18. Experiment plan and acceptance criteria
+## 19. Experiment plan and acceptance criteria
 
 ### Phase 1: prove measurement correctness
 
@@ -763,7 +959,7 @@ Acceptance: double-clicking Run creates one experiment through idempotency; retr
 
 This is an experiment design, not a recommendation to execute the Cartesian product immediately. Establish one baseline, isolate sensitivities, and expand only where a result answers a decision you need to make.
 
-## 19. The decisions this study supports
+## 20. The decisions this study supports
 
 **Use AIPerf's generic multimodal client first.** It already addresses streaming load generation and real image input. You do not need to rebuild that layer just to measure a VLM endpoint.
 
@@ -775,7 +971,7 @@ This is an experiment design, not a recommendation to execute the Cartesian prod
 
 The open project choices are the VLM/model family, available GPU/backend, exact screenshot/document task distribution, action/environment adapter, and acceptable success/latency thresholds. None is necessary to understand the mechanism; all are necessary before making a deployment recommendation from benchmark results.
 
-## 20. Evidence, limitations, and source map
+## 21. Evidence, limitations, and source map
 
 This study inspected public code and live UI, traced pinned implementations, and executed an illustrative metric fixture through the actual InferenceX Python reducers. It did not launch a GPU model, replay the real coding corpus, assess VLM accuracy, inspect private fleet infrastructure, or establish speed/cost rankings for your application. The Docker and AIPerf commands are source-grounded templates requiring validation on your chosen deployment.
 
@@ -830,6 +1026,18 @@ Each linked source below has a specific role in the explanation. The codebase pr
 | H20 | [src/aiperf/dataset/loader/single_turn.py][H20] | Generic image input loader |
 | H21 | [src/aiperf/common/environment.py][H21] | Runtime threshold defaults and environment contract |
 | H22 | [src/aiperf/common/models/dataset_models.py][H22] | Conversation, Turn, media and branch data contracts |
+| H23 | [src/aiperf/timing/branch_orchestrator.py][H23] | Child creation, overlap dispatch, delayed joins, failures and cleanup |
+| H24 | [src/aiperf/credit/issuer.py][H24] | Turn admission, session/prefill slots and credit dispatch |
+| H25 | [src/aiperf/credit/callback_handler.py][H25] | Request completion and first-token control flow |
+| H26 | [src/aiperf/credit/sticky_router.py][H26] | Worker affinity, least-loaded routing and fork reference counts |
+| H27 | [src/aiperf/workers/worker.py][H27] | Asynchronous request execution and separate records/control paths |
+| H28 | [src/aiperf/timing/conversation_source.py][H28] | Conversation template sampling and fresh child execution identities |
+| H29 | [src/aiperf/timing/concurrency.py][H29] | Client session and prefill concurrency controls |
+| H30 | [src/aiperf/credit/structs.py][H30] | One-request credit contract and root/parent/session identities |
+| H31 | [src/aiperf/common/loop_scheduler.py][H31] | Pending timers, running coroutines and per-tree timer ownership |
+| H32 | [src/aiperf/timing/replay_dependencies.py][H32] | Recorded cross-stream completion frontiers and runtime barriers |
+| H33 | [src/aiperf/credit/dispatch.py][H33] | Issued, deferred and rejected child lifecycle outcomes |
+| H34 | [src/aiperf/timing/phase/runner.py][H34] | Runtime wiring of phases, replay barriers and branch orchestration |
 | A01 | [packages/db/src/ingest-ci-run.ts][A01] | Workflow artifacts to stored benchmark observations |
 | A02 | [packages/db/src/etl/compute-trace-derived.ts][A02] | Trace ingestion coordinator |
 | A03 | [packages/db/src/etl/compute-request-timeline.ts][A03] | Replay-aware request timeline schema and extraction |
@@ -885,6 +1093,18 @@ Each linked source below has a specific role in the explanation. The codebase pr
 [H20]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/single_turn.py
 [H21]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/environment.py
 [H22]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/models/dataset_models.py
+[H23]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/branch_orchestrator.py
+[H24]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/issuer.py
+[H25]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/callback_handler.py
+[H26]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/sticky_router.py
+[H27]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/worker.py
+[H28]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/conversation_source.py
+[H29]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/concurrency.py
+[H30]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/structs.py
+[H31]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/loop_scheduler.py
+[H32]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/replay_dependencies.py
+[H33]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/credit/dispatch.py
+[H34]: https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/phase/runner.py
 [A01]: https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/ingest-ci-run.ts
 [A02]: https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-trace-derived.ts
 [A03]: https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-request-timeline.ts
