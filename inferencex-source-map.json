@@ -1,0 +1,494 @@
+{
+  "study_revision": 2,
+  "inspected_at": "2026-09-24",
+  "scope": "image-based agents: screenshots, documents and tools",
+  "harness_site_head": "56a0cf70f4c0359454ee4bd15a17770b541a3e3e",
+  "sources": [
+    {
+      "id": "B01",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "benchmarks/benchmark_lib.sh",
+      "role": "Client installation, trace selection, replay command, execution, evaluation dispatch",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/benchmark_lib.sh",
+      "file_sha256": "34832d2558cd126bd9e9fa05497fd217783ce1da5d7ff32431e10e4dfbaab5cd"
+    },
+    {
+      "id": "B02",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "benchmarks/runtime_settings.sh",
+      "role": "Explicit default warmup, error, timing, Python and history settings",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/runtime_settings.sh",
+      "file_sha256": "ff5378e913ea124505bad6fac291e04ab33923b6f78d9b3315e2ee11991aa85d"
+    },
+    {
+      "id": "B03",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "configs/nvidia-master.yaml",
+      "role": "Concrete model/image/runner and concurrency search spaces",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/configs/nvidia-master.yaml",
+      "file_sha256": "05dda25b06b0e15fc6a537a4cb98c2beba4ee64d88744f1878ae5a770979329c"
+    },
+    {
+      "id": "B04",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "benchmarks/single_node/agentic/qwen3.5_fp8_b200_sglang_mtp.sh",
+      "role": "Actual Qwen serving arguments, synthetic acceptance, eval/replay branches",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/benchmarks/single_node/agentic/qwen3.5_fp8_b200_sglang_mtp.sh",
+      "file_sha256": "2dd0c989d99f09be82169897cdbc366d4539ec59ef1e63a94739356535de7b97"
+    },
+    {
+      "id": "B05",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/datasets/proxy_to_weka.py",
+      "role": "Capture conversion, deduplication, input accounting and block identities",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/datasets/proxy_to_weka.py",
+      "file_sha256": "11957e5fe9f7350375ab9359a06dff2d0737ebd24c61cbd1461d119923139f1f"
+    },
+    {
+      "id": "B06",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "golden_al_distribution/README.md",
+      "role": "Golden speculative acceptance protocol and engine conventions",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/golden_al_distribution/README.md",
+      "file_sha256": "385c9474b9b9d166d282038d3bbc480bb34fc19592d7610c75e0fabb1137607d"
+    },
+    {
+      "id": "B07",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/validate_agentic_result.py",
+      "role": "Post-run error-fraction validation",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/validate_agentic_result.py",
+      "file_sha256": "c630f1cb5101c84ab43ead4c5e5e25e1d9d42b1926e867f47653d90d7c8dd5e9"
+    },
+    {
+      "id": "B08",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/process_agentic_result.py",
+      "role": "Artifact-to-aggregate executable",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/process_agentic_result.py",
+      "file_sha256": "6abd8ed1a5b68e9e05def8b9a8e2ddd12efd9e15e6512a4b24d363e19dded8cb"
+    },
+    {
+      "id": "B09",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/request_metrics.py",
+      "role": "Latency, throughput, cache, interactivity and token reductions",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/request_metrics.py",
+      "file_sha256": "b20f287400f3dc6979aebf443f43abb560903936b2b98af1d66986d46e09ab24"
+    },
+    {
+      "id": "B10",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/artifacts.py",
+      "role": "Warmup/error filtering and raw evidence loading",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/artifacts.py",
+      "file_sha256": "b9f27d2f7656e27fcc355c3cc6d565e76302f7afaaf05159ec69e3759b2fceaf"
+    },
+    {
+      "id": "B11",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/__init__.py",
+      "role": "Versioned result construction and deployment metadata",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/__init__.py",
+      "file_sha256": "f3fc7b2ba58cb90ac30e587f3e36dda40d00ba9df1d386366c259014e71c6155"
+    },
+    {
+      "id": "B12",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "docs/eval-agentx-procedures.md",
+      "role": "Evaluation operation and distinction from AgentX throughput",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/docs/eval-agentx-procedures.md",
+      "file_sha256": "e10ca529b6c052fa54ce16fc018d1e2b529f4ccf0f82f102787d43a91f808305"
+    },
+    {
+      "id": "B13",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/matrix/generate.py",
+      "role": "Search-space expansion and evaluation job selection",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/matrix/generate.py",
+      "file_sha256": "e4eb9f1ca0d081cd74ec46d390fec82553371450e14e559bcd6e7c9054ed19ac"
+    },
+    {
+      "id": "B14",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": ".github/workflows/benchmark-tmpl.yml",
+      "role": "Reusable execution and artifact workflow",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/.github/workflows/benchmark-tmpl.yml",
+      "file_sha256": "c024143c4c60debee0e8ea41375a8b415fc77e6abb67111ff7155a2b3d02a36c"
+    },
+    {
+      "id": "B15",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": ".gitmodules",
+      "role": "Harness and cluster-tool submodule locations",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/.gitmodules",
+      "file_sha256": "da27c80137e9ac01d1e71e383782d308f72e445bfcf8cd94b3a500b00dc5f41e"
+    },
+    {
+      "id": "B16",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "docs/architecture.md",
+      "role": "Configuration-to-run ownership boundaries",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/docs/architecture.md",
+      "file_sha256": "01d71c4cd3c9662170a75bd68c0a7ebdd99339c2bc8604f9f3e56c6470df3ebe"
+    },
+    {
+      "id": "B17",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/server_metrics.py",
+      "role": "Backend-specific telemetry normalization",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/server_metrics.py",
+      "file_sha256": "918d8a6d5f39921330c90c6905043f778b55813410e7f9cb65dd5a1da15a315e"
+    },
+    {
+      "id": "B18",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/results/agentic/common.py",
+      "role": "Exact Python percentile interpolation",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/results/agentic/common.py",
+      "file_sha256": "30f63346d48a8077a539d3845af3c8cc897064e48b9cdd3b430f4d0c6c9f46a9"
+    },
+    {
+      "id": "B19",
+      "repository": "InferenceX",
+      "commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+      "path": "infx/matrix/validation.py",
+      "role": "Configuration schemas and default agentic duration",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX/blob/5abd17e2ef546bd557608b370a8ff6123a170cbf/infx/matrix/validation.py",
+      "file_sha256": "f4b083a33827285b25d697ca692469e55edf605d213d03128132ee4d881f91fa"
+    },
+    {
+      "id": "H01",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/weka_trace_models.py",
+      "role": "Strict trace schema; no image payload fields",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace_models.py",
+      "file_sha256": "e64c1474f9148c8a53a1a54ab5f99af5b9718908ab975ebda887d19f672d19d0"
+    },
+    {
+      "id": "H02",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/weka_trace.py",
+      "role": "Trace eligibility, synthetic reconstruction, model mapping, child dependencies",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_trace.py",
+      "file_sha256": "f32aa1a823203ec006d63a4d6508fedd3bc1bd886e233127cca9b4b29f9db6ef"
+    },
+    {
+      "id": "H03",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/weka_prompt_compose.py",
+      "role": "Token-block prompt composition",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_prompt_compose.py",
+      "file_sha256": "b2647dbcdf2e8fc24efa3cc86745348772dad7f24d9e65ba1d165e0d15298b5f"
+    },
+    {
+      "id": "H04",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/common/scenario/inferencex_agentx_mvp.py",
+      "role": "Scenario locks, defaults, and coverage requirement",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/inferencex_agentx_mvp.py",
+      "file_sha256": "25e83793708e1989f99a8ec5e227717b51e6a2091b1163453e863a70e64d363f"
+    },
+    {
+      "id": "H05",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/common/scenario/validator.py",
+      "role": "Scenario conflict and corpus-identity validation",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/scenario/validator.py",
+      "file_sha256": "f0a40c145306c65d03e8eb7777b7f64c1317d29b1c757f69c190b9bb4b624b86"
+    },
+    {
+      "id": "H06",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/strategies/agentic_replay.py",
+      "role": "Warmup, timers, dispatch, failure and recycle state machine",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/strategies/agentic_replay.py",
+      "file_sha256": "ae980f4bbcbad84b5076bffb40394da475fdfdaedeea00c81f7f79ce8cf0aa9a"
+    },
+    {
+      "id": "H07",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/trajectory_source.py",
+      "role": "t* sampling, replay identity, snapshot and cache-bust state",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/trajectory_source.py",
+      "file_sha256": "5e30c06ed02ab4e373ca0e9fa2a262e226b58de72c2b60e5a094a4e98c27a26b"
+    },
+    {
+      "id": "H08",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/timing/session_tree.py",
+      "role": "Concurrency ownership until the complete tree drains",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/timing/session_tree.py",
+      "file_sha256": "d858e8ba0bc6c2007b1c5d630d67b5d003b8bec2d31a0301eb337ac68c61b25a"
+    },
+    {
+      "id": "H09",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/workers/session_manager.py",
+      "role": "Accumulated conversation history and context modes",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/workers/session_manager.py",
+      "file_sha256": "c30e3e7a12b778120cf6639e9737f39d69cbf9bd4f05d6a87b5f2ae0a6ec82a1"
+    },
+    {
+      "id": "H10",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/weka_tool_shape.py",
+      "role": "Synthetic tool-call/result shaping",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/weka_tool_shape.py",
+      "file_sha256": "136e66512b89a8dbb640973bc7e533315482c9a2cc2fff529b80049b7b6429e4"
+    },
+    {
+      "id": "H11",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/multi_turn.py",
+      "role": "Generic multimodal conversations and UUID mode restriction",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/multi_turn.py",
+      "file_sha256": "eb1c3e9039741fde6ecdbd79a0d510062732bd5a0a904d73497fdc25b105450a"
+    },
+    {
+      "id": "H12",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/endpoints/openai_chat.py",
+      "role": "Chat wire format, image serialization, response parsing",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/endpoints/openai_chat.py",
+      "file_sha256": "70317c46856444d9300f0a5947a72fa3f3b27382ad913dd7792ab093d98868ef"
+    },
+    {
+      "id": "H13",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/metrics/types/request_latency_metric.py",
+      "role": "Latency ends at final content; metric failure-population flags",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/metrics/types/request_latency_metric.py",
+      "file_sha256": "c79db67c59e90650a31aaaa09cc2d65ccc8db07c085e9b200355bce7b06d610b"
+    },
+    {
+      "id": "H14",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/metrics/types/inter_token_latency_metric.py",
+      "role": "Per-request ITL formula and one-token exclusion",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/metrics/types/inter_token_latency_metric.py",
+      "file_sha256": "c1ecdb3e6997320b2ade77549c04574804693ee6ecaf46dfe36ef1811b16491a"
+    },
+    {
+      "id": "H15",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "docs/tutorials/vision.md",
+      "role": "VLM image inputs and source-grounded smoke commands",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/docs/tutorials/vision.md",
+      "file_sha256": "2c4406fe05bfbd50ab2db5947fa4a75681c40bacd9d0e2fe4e0dca16e1279c02"
+    },
+    {
+      "id": "H16",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "docs/reference/effective-vs-active-metrics.md",
+      "role": "Queue-aware and time-weighted metric semantics",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/docs/reference/effective-vs-active-metrics.md",
+      "file_sha256": "5b01b967b00c882a275a9ccf9ba206b2a07886a945a430ed945cf4b70fbf4aaf"
+    },
+    {
+      "id": "H17",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "pyproject.toml",
+      "role": "Package identity, Python compatibility and dependencies",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/pyproject.toml",
+      "file_sha256": "a0636c33559eccda6c008e490da90c1600630ac173b25898011f6ce14733d163"
+    },
+    {
+      "id": "H18",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/semianalysis_cc_traces_weka.py",
+      "role": "Public corpus resolution",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/semianalysis_cc_traces_weka.py",
+      "file_sha256": "71e7eea573008a1ea380e2c80255b6431b0b1366af92c65b0c3f992f332de5bc"
+    },
+    {
+      "id": "H19",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/records/records_manager.py",
+      "role": "Runtime phase and duration coverage checks",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/records/records_manager.py",
+      "file_sha256": "77a6974e6e41186654c42592e96996ac5196003bda6f111799f4461a268dfe44"
+    },
+    {
+      "id": "H20",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/dataset/loader/single_turn.py",
+      "role": "Generic image input loader",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/dataset/loader/single_turn.py",
+      "file_sha256": "03ef8b685b911125a62a89a41f8bd2be11ef89f9ba1a5d054966789a2633bb1e"
+    },
+    {
+      "id": "H21",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/common/environment.py",
+      "role": "Runtime threshold defaults and environment contract",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/environment.py",
+      "file_sha256": "11d5d508f76da8fa5324c87202af778b33e0caa2b7b1224b411dd29941bdb170"
+    },
+    {
+      "id": "H22",
+      "repository": "aiperf",
+      "commit": "754356e9a39acc6cc6afb242d123bb57c3fb6f75",
+      "path": "src/aiperf/common/models/dataset_models.py",
+      "role": "Conversation, Turn, media and branch data contracts",
+      "url": "https://github.com/SemiAnalysisAI/aiperf/blob/754356e9a39acc6cc6afb242d123bb57c3fb6f75/src/aiperf/common/models/dataset_models.py",
+      "file_sha256": "f548379e23ec9fb6f67635ce3e05aaa7bac529a8a2bcd92c05648ddab991651d"
+    },
+    {
+      "id": "A01",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/db/src/ingest-ci-run.ts",
+      "role": "Workflow artifacts to stored benchmark observations",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/ingest-ci-run.ts",
+      "file_sha256": "12596192b293a8845ad0651e06771d58817654e5edb66a02e3070b29fef348a6"
+    },
+    {
+      "id": "A02",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/db/src/etl/compute-trace-derived.ts",
+      "role": "Trace ingestion coordinator",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-trace-derived.ts",
+      "file_sha256": "a6052e18a333c4d50675dcfd8ce6d87b7e0b19260dd965a9be25763491d5bfa2"
+    },
+    {
+      "id": "A03",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/db/src/etl/compute-request-timeline.ts",
+      "role": "Replay-aware request timeline schema and extraction",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/compute-request-timeline.ts",
+      "file_sha256": "377d6f6cab10d6d7d59e7021d16e2ca872a2bfff6d28030966e1b36189d6bbc0"
+    },
+    {
+      "id": "A04",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/db/src/etl/agentic-v3-flatten.ts",
+      "role": "Compatibility mappings and deliberately unmapped fields",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/etl/agentic-v3-flatten.ts",
+      "file_sha256": "cace5a2e3e6ad70273fc2aa2fa722bb0ddd07ea48efe41c55ccfb161c053f753"
+    },
+    {
+      "id": "A05",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/db/src/queries/derived-agentic-metrics.ts",
+      "role": "Stored ratio percentiles, reciprocal metric, fallback recomputation",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/db/src/queries/derived-agentic-metrics.ts",
+      "file_sha256": "534a1813d077417bc2924d0a5c5ca158fc7aed16960a1cb1807c83eed226e1c8"
+    },
+    {
+      "id": "A06",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/hooks/api/use-derived-agentic-metrics.ts",
+      "role": "Typed metric query and batching",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/hooks/api/use-derived-agentic-metrics.ts",
+      "file_sha256": "860e62a7bae4924023988be691ccb54d194f2c16b2ac220ae3c9cd342f338f87"
+    },
+    {
+      "id": "A07",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/components/inference/agentic-point/agentic-point-detail.tsx",
+      "role": "Detail UI composition and diagnostic views",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/agentic-point-detail.tsx",
+      "file_sha256": "26f995df1fd12fc6be3d8686290537033b5f58d0cf7584f48007232422491391"
+    },
+    {
+      "id": "A08",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/components/inference/agentic-point/use-detail-view.ts",
+      "role": "URL-persisted view selection",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/use-detail-view.ts",
+      "file_sha256": "ff31790e99dc324ba182ee0d7dec7870fdd32ae4c84f0fd4e728d0e1f798a434"
+    },
+    {
+      "id": "A09",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/components/inference/agentic-point/point-summary.tsx",
+      "role": "Engine-dependent cache labels and provenance display",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/agentic-point/point-summary.tsx",
+      "file_sha256": "18d828c0dd00e33c9f7b482fb802fa3a505f29798deb11bd2d8295197c658f04"
+    },
+    {
+      "id": "A10",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/components/inference/hooks/useChartData.ts",
+      "role": "Read data, filter, derive and prepare chart points",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/hooks/useChartData.ts",
+      "file_sha256": "b19d707045750db6d033d88c5275f75f66fcc4f83f6c3f78bd0165bf068052e7"
+    },
+    {
+      "id": "A11",
+      "repository": "InferenceX-app",
+      "commit": "b710865c22e631d1cf0420f029afbd950ee73bb8",
+      "path": "packages/app/src/components/inference/utils/global-pareto.ts",
+      "role": "Non-dominated observations, axis direction and frontier geometry",
+      "url": "https://github.com/SemiAnalysisAI/InferenceX-app/blob/b710865c22e631d1cf0420f029afbd950ee73bb8/packages/app/src/components/inference/utils/global-pareto.ts",
+      "file_sha256": "b1b48cd296bc41495d8c52357c3862910c0f3a990b3473a719cd437330d62b25"
+    }
+  ],
+  "live_ui_observation": {
+    "url": "https://inferencex.semianalysis.com/inference/agentic/442369",
+    "views": [
+      "Per-point",
+      "Request timeline",
+      "Aggregates across configs",
+      "Logs"
+    ],
+    "isl_osl_samples": 5029,
+    "interactivity_points": 5028,
+    "no_gpu_job_launched": true
+  },
+  "verification": {
+    "actual_python_reducer_fixture": "agentx-metric-walkthrough.json",
+    "gpu_benchmark_executed": false,
+    "vlm_accuracy_evaluated": false,
+    "commands_status": "source-grounded templates, not deployment-tested"
+  }
+}

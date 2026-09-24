@@ -1,0 +1,325 @@
+{
+  "kind": "ILLUSTRATIVE FIXTURE \u2014 NOT MEASURED MODEL PERFORMANCE",
+  "source_repository": "https://github.com/SemiAnalysisAI/InferenceX",
+  "source_commit": "5abd17e2ef546bd557608b370a8ff6123a170cbf",
+  "executed_functions": [
+    "load_records_with_accounting",
+    "compute_request_metrics"
+  ],
+  "raw_fixture_records": [
+    {
+      "metadata": {
+        "conversation_id": "illustrative-1",
+        "turn_index": 0,
+        "benchmark_phase": "warmup",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 3000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 2000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 1000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 10.1010101010101,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "conversation_id": "illustrative-1",
+        "turn_index": 0,
+        "benchmark_phase": "profiling",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 3000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 2000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 1000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 10.1010101010101,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "conversation_id": "illustrative-2",
+        "turn_index": 0,
+        "benchmark_phase": "profiling",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 4000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 3000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 1000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 20.2020202020202,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "conversation_id": "illustrative-3",
+        "turn_index": 0,
+        "benchmark_phase": "profiling",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 6000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 5000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 2000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 30.303030303030305,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "conversation_id": "illustrative-4",
+        "turn_index": 0,
+        "benchmark_phase": "profiling",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 11000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 10000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 4000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 60.60606060606061,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "conversation_id": "illustrative-1",
+        "turn_index": 0,
+        "benchmark_phase": "profiling",
+        "request_start_ns": 1000000000,
+        "request_end_ns": 3000000000
+      },
+      "metrics": {
+        "request_latency": {
+          "value": 2000,
+          "unit": "ms"
+        },
+        "time_to_first_token": {
+          "value": 1000,
+          "unit": "ms"
+        },
+        "inter_token_latency": {
+          "value": 10.1010101010101,
+          "unit": "ms"
+        },
+        "input_sequence_length": {
+          "value": 1000,
+          "unit": "tokens"
+        },
+        "output_sequence_length": {
+          "value": 100,
+          "unit": "tokens"
+        }
+      },
+      "error": {
+        "type": "HTTP503",
+        "message": "Illustrative failure"
+      }
+    }
+  ],
+  "accounting": {
+    "records_total": 6,
+    "records_profiled": 4,
+    "records_dropped_total": 2,
+    "records_warmup_dropped": 1,
+    "records_error_dropped": 1,
+    "error_categories": {
+      "HTTP503": 1
+    }
+  },
+  "verified_values": {
+    "p90_e2e_norm_intvty": 11.76470588235294,
+    "p90_intvty": 19.411764705882355,
+    "output_tput_tps": 40,
+    "input_tput_tps": 400,
+    "total_tput_tps": 440,
+    "duration_seconds": 10,
+    "mean_e2el": 5
+  },
+  "upstream_reducer_output": {
+    "qps": {
+      "window_seconds": 1.0,
+      "samples": 8,
+      "mean": 0.375,
+      "p50": 0.0,
+      "p75": 1.0,
+      "p90": 1.0,
+      "p95": 1.0,
+      "std": 0.4841229182759271
+    },
+    "latency": {
+      "ttft": {
+        "mean": 2.0,
+        "p50": 1.5,
+        "p75": 2.5,
+        "p90": 3.4000000000000004,
+        "p95": 3.6999999999999993,
+        "std": 1.224744871391589
+      },
+      "e2el": {
+        "mean": 5.0,
+        "p50": 4.0,
+        "p75": 6.25,
+        "p90": 8.5,
+        "p95": 9.249999999999998,
+        "std": 3.082207001484488
+      },
+      "itl": {
+        "mean": 0.030303030303030304,
+        "p50": 0.025252525252525252,
+        "p75": 0.03787878787878788,
+        "p90": 0.05151515151515152,
+        "p95": 0.05606060606060605,
+        "std": 0.018897259529161322
+      },
+      "tpot": {
+        "mean": 0.030303030303030304,
+        "p50": 0.025252525252525252,
+        "p75": 0.03787878787878788,
+        "p90": 0.05151515151515152,
+        "p95": 0.05606060606060605,
+        "std": 0.018897259529161322
+      },
+      "intvty": {
+        "mean": 33.0,
+        "p50": 39.6,
+        "p75": 26.4,
+        "p90": 19.41176470588235,
+        "p95": 17.837837837837842,
+        "std": 30.868673440885022
+      },
+      "e2e_norm_intvty": {
+        "mean": 20.0,
+        "p50": 25.0,
+        "p75": 16.0,
+        "p90": 11.764705882352938,
+        "p95": 10.810810810810812,
+        "std": 15.0
+      },
+      "full_response_itl": {},
+      "full_response_intvty": {}
+    },
+    "tokens": {
+      "input": {
+        "mean": 1000,
+        "p50": 1000.0,
+        "p75": 1000.0,
+        "p90": 1000.0,
+        "p95": 1000.0,
+        "std": 0.0
+      },
+      "output_actual": {
+        "mean": 100,
+        "p50": 100.0,
+        "p75": 100.0,
+        "p90": 100.0,
+        "p95": 100.0,
+        "std": 0.0
+      },
+      "output_expected": {}
+    },
+    "throughput": {
+      "input": {
+        "tokens_per_second": 400.0
+      },
+      "output": {
+        "tokens_per_second": 40.0
+      },
+      "total": {
+        "tokens_per_second": 440.0
+      },
+      "duration_seconds": 10.0,
+      "per_gpu": {}
+    },
+    "cache": {
+      "theoretical_cache_hit_rate": null
+    }
+  },
+  "notes": [
+    "All four successful profiling requests overlap and begin at second 1.",
+    "Sum of successful latencies is 20 seconds; elapsed window is 10 seconds.",
+    "P90 ratio uses linear interpolation, then inversion.",
+    "Warmup and error records do not enter the InferenceX Python request reducer."
+  ]
+}

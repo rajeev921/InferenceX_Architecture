@@ -1,0 +1,171 @@
+{
+  "status": "PROPOSED DESIGN; not a drop-in InferenceX or AIPerf schema",
+  "schema_version": "vlm-benchmark-blueprint/v1",
+  "workloads": [
+    "screenshot_grounding",
+    "document_extraction",
+    "combined_visual_tool_task"
+  ],
+  "modes": {
+    "image_serving": {
+      "live_environment": false,
+      "real_images": true,
+      "task_success_claim": false
+    },
+    "visual_replay": {
+      "live_environment": false,
+      "real_images": true,
+      "recorded_history": true,
+      "offline_turn_scoring_optional": true,
+      "task_success_claim": false
+    },
+    "live_agent": {
+      "live_environment": true,
+      "real_images": true,
+      "actual_outputs_drive_actions": true,
+      "real_decoding_required": true,
+      "task_evaluator_required": true
+    }
+  },
+  "manifest_required_fields": [
+    "run_id",
+    "mode",
+    "dataset_version",
+    "dataset_sha256",
+    "task_split",
+    "model_revision",
+    "tokenizer_revision",
+    "processor_revision",
+    "processor_options",
+    "serving_image_digest",
+    "engine_version",
+    "harness_commit",
+    "gpu_topology",
+    "precision",
+    "cache_policy",
+    "sampling_policy",
+    "concurrency_definition",
+    "load_schedule",
+    "seed",
+    "warmup_policy",
+    "measurement_window",
+    "drain_policy",
+    "retry_policy",
+    "tool_versions",
+    "agent_policy_version",
+    "evaluator_version",
+    "metric_schema_version"
+  ],
+  "event_common_fields": [
+    "run_id",
+    "task_id",
+    "task_attempt_id",
+    "event_id",
+    "parent_event_id",
+    "depends_on",
+    "monotonic_start_ns",
+    "monotonic_end_ns",
+    "status",
+    "artifact_refs"
+  ],
+  "asset_fields": [
+    "asset_ref",
+    "sha256",
+    "mime_type",
+    "encoded_bytes",
+    "original_width_px",
+    "original_height_px",
+    "processed_width_px",
+    "processed_height_px",
+    "page",
+    "crop_transform",
+    "processor_fingerprint"
+  ],
+  "request_fields": [
+    "request_id",
+    "phase",
+    "scheduled_ns",
+    "http_start_ns",
+    "first_content_ns",
+    "action_ready_ns",
+    "last_content_ns",
+    "http_end_ns",
+    "usage_source",
+    "prompt_total",
+    "text_tokens_nullable",
+    "visual_tokens_nullable",
+    "completion_tokens",
+    "message_artifact",
+    "response_artifact",
+    "error_category"
+  ],
+  "tool_fields": [
+    "tool_name",
+    "arguments_artifact",
+    "schema_valid",
+    "coordinate_space",
+    "observation_before",
+    "observation_after",
+    "retry_of",
+    "outcome"
+  ],
+  "task_fields": [
+    "task_attempt_id",
+    "admitted_ns",
+    "terminal_ns",
+    "terminal_reason",
+    "success",
+    "partial_scores",
+    "deadline_met",
+    "steps",
+    "evaluator_version",
+    "evaluation_artifact"
+  ],
+  "storage_entities": [
+    "runs",
+    "deployment_configs",
+    "tasks",
+    "task_attempts",
+    "requests",
+    "tool_events",
+    "assets",
+    "evaluations",
+    "metric_projections"
+  ],
+  "primary_metrics": {
+    "task_success_rate": "successful eligible attempts / all eligible started attempts",
+    "deadline_goodput": "successful tasks within deadline / declared observation seconds",
+    "cost_per_success": "all comparable run cost including failures and retries / successful tasks",
+    "task_latency": "terminal time - task admission time; outcome populations shown separately"
+  },
+  "measurement_rules": [
+    "Do not convert unknown image-token accounting into zero.",
+    "Record failures and timeouts in outcome denominators.",
+    "Use real acceptance and natural termination for quality evaluation.",
+    "Keep replay source identity separate from replay instance.",
+    "Use per-task/session resampling for uncertainty over correlated turns.",
+    "Never infer GPU kernel phases solely from TTFT."
+  ],
+  "run_states": [
+    "queued",
+    "preparing",
+    "warming",
+    "running",
+    "draining",
+    "evaluating",
+    "publishing",
+    "completed",
+    "failed",
+    "cancelled"
+  ],
+  "ui_views": [
+    "comparison_cohorts",
+    "run_detail",
+    "task_timeline",
+    "image_action_overlay",
+    "server_telemetry",
+    "evaluation_evidence",
+    "manifest_and_artifact_export"
+  ],
+  "see_guide": "inferencex-architecture-guide.html"
+}
