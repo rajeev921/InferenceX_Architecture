@@ -1,0 +1,17 @@
+[00:00] Way that essentially optimizing for that setup is the same as optimizing for the AIPerf AgentX
+[00:13] use case. And the reason for that is that we have everything set up to use this vllm
+[00:20] bench client. And it's a lot easier if we had the setup based on vllm bench.
+[00:30] But it might not really be possible to emulate this, what AIPerf is doing. So it might be that
+[00:37] we really do need to go towards AIPerf. But maybe, maybe, maybe we don't. So that's also
+[00:45] a question that I wanted to explore. Okay. So it's like, like, if we can totally remove
+[00:53] AIPerf and use vllm bench and having the same and can capture the same information, what it does.
+[01:05] Yeah, yeah. So I think it will never really be able to replace it like one to one. Yes,
+[01:11] definitely. But, but at the end of the day, maybe it gives us a good proxy, right? It's
+[01:17] like, okay, if we use this setup with vllm bench serve, this is a good proxy for what
+[01:27] AgentX is testing for. So if we optimize on one, we know that we're going to get good results
+[01:34] on the other. Yeah. That's at the end of the day, what we, what we care about. Yeah, sure.
+[01:41] So. Yeah, I will look into that perspective. Yeah. All right. Good. Good. Any, any last
+[01:56] questions? Oh, no. I think I already asked a lot. Okay. Thank you. Thanks for this session.
+[02:05] Yeah, no, no worries. Let's, let's hope you get all the, all this access sorted out and get,
+[02:12] get, start doing some stuff soon. All right. Have a good, have a good rest of the day.
+[02:20] Yeah, you too. Bye bye. Bye bye.

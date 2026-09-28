@@ -1,0 +1,80 @@
+[00:00] And what these release gates are really just a benchmarking across different inputs and
+[00:08] output lengths and concurrences and then we take some, basically we compare against NVIDIA
+[00:16] and we take an average and we see if the performance is, essentially if it's competitive
+[00:28] performance wise and then there's some thresholds that we use. Let me just open here one case so just
+[00:36] so something concrete. Can I start recording so that I will have the... Yeah absolutely go ahead.
+[00:50] So I'll take here, let's look at, for example, do they have some baselines here? And so let's
+[01:14] take some other model where we have the v4 flushed in. So let's take here the, for example,
+[01:27] it's very strange, I'll take here a random combination so this is going to be meaningless
+[01:47] but just to draw it. Yeah so we take two, so the baseline would be some NVIDIA run and this
+[02:01] would be our run. We calculate these ratios and then we calculate the final gate value which
+[02:11] is the geometric mean of these ratios. The thing is that this is now sort of outdated
+[02:23] or the today's use cases. Yes there's still some short sequence chart cases
+[02:32] but more and more it's a gigantic scenario where you have a model in an
+[02:40] harness right and then it's doing multiple turns with the longer and longer context.
+[02:47] It's becoming more important and for better or worse this inference X and semi-analysis,
+[03:04] they have a considerable amount of influence on what gets attention,
+[03:14] what doesn't get attention and they are good at what they do as well. So this agent X
+[03:23] or this agent X scenario, what this is is essentially
+[03:40] it's a run with AI perf which is the benchmarking client from NVIDIA.
+[03:48] Together with their own data set, this data set contains this
+[03:56] of some kind of agent in the harness and so instead of having multiple outputs and
+[04:05] concurrency is isolated as this data set and the model runs through it at the fixed concurrency
+[04:12] and that's essentially one point here. So each point here is a fixed concurrency
+[04:23] and then one run through this data set, this agentic data set.
+[04:30] This is all public, it's in the
+[04:33] so if we go here to the
+[04:47] so if you dig through this you can find the actual command
+[04:51] that they run. I think I linked it but let me see. Yes you had 302 or some lines.
+[04:59] What was the name of the function? Was it build-replay command?
+[05:10] So this is just an AI perf command at the end and of course there's a lot of things involved
+[05:23] here but what I wanted to understand is
+[05:28] so first can we just take this minimum the core of this which is this AI perf was the public data
+[05:38] set and if we configure it with the same parameters right do we get the same or similar
+[05:48] results to what they are publishing? So we don't need this whole inference x apparatus
+[05:56] we just run the core and we can get a similar results to what they are showing.
+[06:08] So let me reiterate if I understand correctly so you just want to take the benchmark shell
+[06:17] for not the complete the minimal and try to integrate with the existing [internal stack]
+[06:23] and see if whatever the input parameter they pass
+[06:28] can we pass the same from the [internal stack] and produce the same result right?
+[06:36] Yes so for starters I wanted to understand what is this minimum
+[06:43] the minimum component that we need to extract. Okay okay because when I was going through this
+[06:51] I also understand there are a lot more what they do like this benchmark also try to read
+[06:59] whatever they replay right like how they generate the thing what are the different
+[07:05] metrics is what are the different kind of ping versions so we have to also think about
+[07:10] that that what are the things they are generating and what are the things that we need
+[07:16] or we don't need on our visualization so yeah right okay yeah yeah so then yeah then we would
+[07:24] go again so I don't want to quite replicate this whole thing yes like they're doing
+[07:34] that the the north star here is that we want to have a test for this agentic use case
+[07:45] and they basically have something yeah that works right so they they
+[07:59] that we could just extract the core beats and use for ourselves
+[08:09] there I started doing some work along those lines but then
+[08:14] there's a bunch of other stuff just comes along okay so so just just one question like
+[08:22] when you say agentic stuff because because these are like three four different
+[08:29] variety of work they do individually so are we also trying to grab how their agentic work
+[08:37] handle everything internally as well as the benchmarking result like these two
+[08:44] yeah so the the benchmarking is so the simulation of the agentic when I say agentic
+[08:55] workflow what I mean is that it's not this traditional benchmarking setup where we fix an
+[09:04] input length we need an output line we fix a concurrency and then it just repeats that many
+[09:10] times yes in this in this LLM plus harness what what you have is like this
+[09:20] multiple turns on the same request you have a lot of cache a lot of
+[09:28] KV cache hit hits so the model you know it might end up generating a very long output
+[09:37] but that was over the course of multiple turns so maybe for example maybe the metrics don't look
+[09:47] very good on some particular ISL or some combination but on aggregate right when we
+[09:55] look at the real use case that doesn't matter that much so essentially they
+[10:03] based on this AI perf and their own data set they simulate uh you know how a model performs
+[10:12] in in one of these uh if it was in the real hard yes I understood because I saw also they
+[10:21] use a separate harness for this that they call internally so that will be a bit interesting
+[10:29] bit interesting to look at yeah yeah I understood
+[10:34] good so if you go to our repository the [internal perf repo]
+[10:41] here in examples I think there's an AI perf agent x do I have the access of [internal perf repo]
+[10:58] uh you should I have access of [internal repo] but I
+[11:05] I do not uh maybe maybe um no no we need to ask uh not visible we need to ask maybe [colleague] or
+[11:21] so if I go here let's see the members and I should see you here yes yes okay
+[11:31] um but I now let me just see if I can yeah so I don't have uh yeah so I get uh so I think
+[12:13] the step now is that [colleague] can just add you to the think is out um because all these
+[12:22] repository I cannot see [internal repos] I do not see anything uh yeah
+[12:31] I yeah we probably if we add you to this [internal dev
+[12:39] team] or one of these teams you would be able to uh let me just check one thing here
+[12:50] [colleague] is in uh is in holiday today right yeah yeah I think he had to take uh I'm looking
+[13:07] trying to look for because I asked this is uh
